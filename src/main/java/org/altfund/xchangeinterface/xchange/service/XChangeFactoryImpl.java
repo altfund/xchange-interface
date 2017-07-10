@@ -12,42 +12,100 @@ import org.altfund.xchangeinterface.xchange.model.Exchange;
 import org.knowm.xchange.ExchangeFactory;
 import org.knowm.xchange.ExchangeSpecification;
 import org.knowm.xchange.exceptions.ExchangeException;
-import org.knowm.xchange.service.trade.TradeService;
+import org.knowm.xchange.service.account.AccountService;
 import org.knowm.xchange.dto.meta.ExchangeMetaData;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.context.EnvironmentAware;
-import org.springframework.core.env.Environment;
+//import org.springframework.context.EnvironmentAware;
+//import org.springframework.core.env.Environment;
 
 /**
  * altfund
  */
 @Slf4j
-public class XChangeFactoryImpl implements EnvironmentAware, InitializingBean, XChangeFactory {
+public class XChangeFactoryImpl implements XChangeFactory { // EnvironmentAware, InitializingBean, XChangeFactory {
 
-    private Environment environment;
+    //private Environment environment;
+    //TODO this is the wrong DS for this job know that this is set on a per
+    //req basis
     private Map<Exchange, org.knowm.xchange.Exchange> exchangeMap;
 
     @Override
-    public void afterPropertiesSet() throws Exception {
+    public void setProperties(String exchangeName) {
         Map<Exchange, org.knowm.xchange.Exchange> exchangeMap = new LinkedHashMap<>();
 
         for (Exchange exchange : Exchange.values()) {
-            ExchangeSpecification exchangeSpecification = createExchangeSpecification(exchange);
-            try {
-                exchangeMap.put(exchange, ExchangeFactory.INSTANCE.createExchange(exchangeSpecification));
-                log.info("Added exchange " + exchange);
-            } catch (ExchangeException ee) {
-                //TODO NEEDS TO BE CAUGHT AND REPORTED TO CONSUMER
-                log.error("Couldn't create XChange " + exchange, ee);
+            log.info("For exchange " + exchange.getExchangeClassName());
+            log.info("requested  " + exchangeName);
+            if (exchange.getExchangeClassName().contains(exchangeName)) {
+                ExchangeSpecification exchangeSpecification = createExchangeSpecification(exchange);
+                try {
+                    exchangeMap.put(exchange, ExchangeFactory.INSTANCE.createExchange(exchangeSpecification));
+                    log.info("Added exchange " + exchange);
+                } catch (ExchangeException ee) {
+                    //TODO NEEDS TO BE CAUGHT AND REPORTED TO CONSUMER
+                    log.error("Couldn't create XChange " + exchange, ee);
+                }
             }
         }
+        this.exchangeMap = exchangeMap;
+    }
 
+    @Override
+    public void setProperties(Map<String, String> params) {
+        Map<Exchange, org.knowm.xchange.Exchange> exchangeMap = new LinkedHashMap<>();
+
+        log.info("\nGiven Parameters for exchange: " + params.get("exchange"));
+        for (Map.Entry<String, String> entry : params.entrySet()) {
+            log.info("property: " + entry.getKey());
+            log.info("value: " + entry.getValue());
+        }
+
+        for (Exchange exchange : Exchange.values()) {
+            if (exchange.getExchangeClassName().contains(params.get("exchange"))) {
+                ExchangeSpecification exchangeSpecification = createExchangeSpecification(exchange, params);
+                try {
+                    exchangeMap.put(exchange, ExchangeFactory.INSTANCE.createExchange(exchangeSpecification));
+                    log.info("Added exchange " + exchange);
+                } catch (ExchangeException ee) {
+                    //TODO NEEDS TO BE CAUGHT AND REPORTED TO CONSUMER
+                    log.error("Couldn't create XChange " + exchange, ee);
+                }
+            }
+        }
         this.exchangeMap = Collections.unmodifiableMap(exchangeMap);
     }
+
+    //@Override
+    //public void afterPropertiesSet() throws Exception {
+    //    Map<Exchange, org.knowm.xchange.Exchange> exchangeMap = new LinkedHashMap<>();
+
+    //    for (Exchange exchange : Exchange.values()) {
+    //        ExchangeSpecification exchangeSpecification = createExchangeSpecification(exchange);
+    //        try {
+    //            exchangeMap.put(exchange, ExchangeFactory.INSTANCE.createExchange(exchangeSpecification));
+    //            log.info("Added exchange " + exchange);
+    //        } catch (ExchangeException ee) {
+    //            //TODO NEEDS TO BE CAUGHT AND REPORTED TO CONSUMER
+    //            log.error("Couldn't create XChange " + exchange, ee);
+    //        }
+    //    }
+
+    //    this.exchangeMap = Collections.unmodifiableMap(exchangeMap);
+    //}
 
     @Override
     public Set<Exchange> getExchanges() {
         return exchangeMap.keySet();
+    }
+
+    @Override
+    public AccountService getAccountService(String exchangeName) {
+        for (Map.Entry<Exchange, org.knowm.xchange.Exchange> entry : exchangeMap.entrySet()) {
+            if (entry.getKey().getExchangeClassName().contains(exchangeName)) {
+                return entry.getValue().getAccountService();
+            }
+        }
+        return null;
     }
 
     @Override
@@ -59,44 +117,59 @@ public class XChangeFactoryImpl implements EnvironmentAware, InitializingBean, X
         }
         return null;
     }
-            //Optional<org.knowm.xchange.Exchange> exchange =
-            //Optional.ofNullable(exchangeMap.get(exchangeName));
-        //org.knowm.xchange.Exchange exchange2 = exchangeMap.get(exchangeName);
 
-        //if (!exchange.isPresent()) {
-        //    throw new XChangeServiceException("Unknown exchange: " + exchangeName);
-        //}
-
-        //return exchange.get().getExchangeMetaData();
-
-    @Override
-    public void setEnvironment(Environment environment) {
-        this.environment = environment;
-    }
+    //@Override
+    //public void setEnvironment(Environment environment) {
+    //    this.environment = environment;
+    //}
 
     protected ExchangeSpecification createExchangeSpecification(Exchange exchange) {
         String exchangeClassName = exchange.getExchangeClassName();
         ExchangeSpecification exchangeSpecification = new ExchangeSpecification(exchangeClassName);
 
-        //TODO optional API_KEY/SECRET_KEY?
-        setExchangeProperty(exchange, "USERNAME", exchangeSpecification::setUserName);
-        setExchangeProperty(exchange, "PASSWORD", exchangeSpecification::setPassword);
-        setExchangeProperty(exchange, "API_KEY", exchangeSpecification::setApiKey);
-        setExchangeProperty(exchange, "SECRET_KEY", exchangeSpecification::setSecretKey);
+        return exchangeSpecification;
+    }
 
+    protected ExchangeSpecification createExchangeSpecification(Exchange exchange, Map<String, String> params) {
+        String exchangeClassName = exchange.getExchangeClassName();
+        ExchangeSpecification exchangeSpecification = new ExchangeSpecification(exchangeClassName);
+
+        //TODO optional API_KEY/SECRET_KEY?
+        //setExchangeProperty(exchange, "USERNAME", exchangeSpecification::setUserName, params.get("username"));
+        //setExchangeProperty(exchange, "PASSWORD", exchangeSpecification::setPassword,  params.get("password"));
+        setExchangeProperty(exchange, "API_KEY", exchangeSpecification::setApiKey, params.get("key"));
+        setExchangeProperty(exchange, "SECRET_KEY", exchangeSpecification::setSecretKey, params.get("secret"));
+        if (params.get("passphrase") != null)
+            exchangeSpecification.setExchangeSpecificParametersItem("passphrase", params.get("passphrase"));
+        else
+            exchangeSpecification.setExchangeSpecificParametersItem("passphrase","");
+
+        //exchangeSpecification.setApiKey(apiKey);
+        //exchangeSpecification.setSecretKey(apiSecret);
+
+        //Map<String, Object> esParams = exchangeSpecification.getExchangeSpecificParameters();
+
+        //for (Map.Entry<String, Object> entry : esParams.entrySet()) {
+        //    log.debug("exchange specific param " + entry.getKey());
+        //    log.debug("exchange specific object " + entry.getValue().toString());
+        //    exchangeSpecification.setExchangeSpecificParametersItem(entry.getKey(), params.get(entry.getKey()));
+        //}
         return exchangeSpecification;
     }
 
     protected void setExchangeProperty(
-            Exchange exchange, String propertyName, Consumer<String> propertyConsumer) {
-
+        Exchange exchange, String propertyName, Consumer<String> propertyConsumer, String property) {
+        log.info("props for exchange " + exchange.name());
         String exchangePropertyName = (exchange.name() + "_" + propertyName).toUpperCase();
+        log.info("props " + exchangePropertyName);
 
-        Optional<String> exchangePropertyValue = Optional.ofNullable(environment.getProperty(exchangePropertyName));
-        if (exchangePropertyValue.isPresent()) {
-            log.debug("Setting exchange property {}.", exchangePropertyName);
-            propertyConsumer.accept(exchangePropertyValue.get());
+        //Optional<String> exchangePropertyValue = Optional.ofNullable(environment.getProperty(exchangePropertyName));
+        //TODO what?
+        //Optional<String> exchangePropertyValue = Optional.ofNullable(property);
+        String exchangePropertyValue = property;
+        if (exchangePropertyValue != "") {
+            log.debug("Setting exchange property {}", property);
+            propertyConsumer.accept(exchangePropertyValue);
         }
-            }
-
+    }
 }

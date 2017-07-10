@@ -12,4 +12,6 @@ import java.util.Map;
 public interface XChangeService {
 
     Map<String, String> getExchangeCurrencies(String exhange);
+    Map<String, Map<String, String>> getExchangeBalances(Map<String, String> params);
+
 }

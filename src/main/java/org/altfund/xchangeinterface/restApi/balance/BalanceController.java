@@ -1,9 +1,10 @@
 package org.altfund.xchangeinterface.restApi.balance;
 
-import org.altfund.xchangeinterface.xchange.service.XChangeService;
+import java.util.Map;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.altfund.xchangeinterface.xchange.service.XChangeService;
 
 /*
  * The above example does not specify GET vs. PUT, POST, and so forth, because
@@ -12,12 +13,15 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 public class BalanceController {
+    private final XChangeService xChangeService;
 
-    private static final String template = "Hello, %s!";
+    public BalanceController(XChangeService xChangeService) {
+        this.xChangeService = xChangeService;
+    }
 
     @RequestMapping("/balance")
-    public Balance balance(@RequestParam(value="name", defaultValue="World") String name) {
-        return new Balance(String.format(template, name));
+    public BalanceMap balance(@RequestParam Map<String, String> params) {
+        return new BalanceMap(xChangeService.getExchangeBalances(params));
     }
 }
 

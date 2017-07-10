@@ -62,6 +62,16 @@
         </dependency>
         <dependency>
             <groupId>org.knowm.xchange</groupId>
+            <artifactId>xchange-bitfinex</artifactId>
+            <version>${xchange.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.knowm.xchange</groupId>
+            <artifactId>xchange-poloniex</artifactId>
+            <version>${xchange.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.knowm.xchange</groupId>
             <artifactId>xchange-kraken</artifactId>
             <version>${xchange.version}</version>
         </dependency>

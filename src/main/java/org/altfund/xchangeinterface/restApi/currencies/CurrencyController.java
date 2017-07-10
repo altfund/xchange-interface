@@ -1,6 +1,5 @@
 package org.altfund.xchangeinterface.restApi.currency;
 
-import org.altfund.xchangeinterface.xchange.service.XChangeService;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -20,14 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 @RestController
 public class CurrencyController {
 
-    private static final String template = "Exchange, %s!";
     private final XChangeService xChangeService;
-
-    //private XChangeService xChangeService;
-
-    //public CurrencyController currencyController(XChangeService xChangeService) {
-    //    this.xChangeService = xChangeService;
-    //}
 
     public CurrencyController(XChangeService xChangeService) {
         this.xChangeService = xChangeService;
