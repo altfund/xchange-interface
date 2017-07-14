@@ -7,6 +7,12 @@ import org.altfund.xchangeinterface.xchange.service.XChangeServiceImpl;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.altfund.xchangeinterface.restApi.currency.CurrencyController;
+import org.altfund.xchangeinterface.restApi.balance.BalanceController;
+import org.altfund.xchangeinterface.restApi.test.TestEndPointController;
+import org.altfund.xchangeinterface.util.JsonHelper;
+import org.altfund.xchangeinterface.util.Pipeline;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * altfund
@@ -20,13 +26,37 @@ public class XChangeServiceConfig {
   }
 
   @Bean
-  public XChangeService xChangeService(XChangeFactory xChangeFactory) {
-    return new XChangeServiceImpl(xChangeFactory);
+  public XChangeService xChangeService(XChangeFactory xChangeFactory, JsonHelper jh) {
+    return new XChangeServiceImpl(xChangeFactory, jh);
   }
 
   @Bean
-  public CurrencyController currencyController(XChangeService XChangeService) {
-    return new CurrencyController(XChangeService);
+  public BalanceController balanceController(XChangeService xChangeService, JsonHelper jh) {
+    return new BalanceController(xChangeService, jh);
   }
 
+  @Bean
+  public CurrencyController currencyController(XChangeService xChangeService) {
+    return new CurrencyController(xChangeService);
+  }
+
+  @Bean
+  public JsonNodeFactory jsonNodeFactory() {
+    return new JsonNodeFactory(true);
+  }
+
+  @Bean
+  public ObjectMapper objectMapper() {
+    return new ObjectMapper();
+  }
+
+  @Bean
+  public JsonHelper jsonHelper(JsonNodeFactory jsonNodeFactory, ObjectMapper objectMapper) {
+    return new JsonHelper(jsonNodeFactory, objectMapper);
+  }
+
+  @Bean
+  public TestEndPointController testEndPointController(JsonHelper jh) {
+    return new TestEndPointController(jh);
+  }
 }

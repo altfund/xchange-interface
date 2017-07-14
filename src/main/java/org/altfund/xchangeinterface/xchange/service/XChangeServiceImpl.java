@@ -3,6 +3,9 @@ package org.altfund.xchangeinterface.xchange.service;
 import java.io.IOException;
 import lombok.extern.slf4j.Slf4j;
 import org.altfund.xchangeinterface.xchange.service.exceptions.XChangeServiceException;
+import org.altfund.xchangeinterface.util.JsonHelper;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.knowm.xchange.exceptions.ExchangeException;
 import org.knowm.xchange.exceptions.NotAvailableFromExchangeException;
 import org.knowm.xchange.exceptions.NotYetImplementedForExchangeException;
@@ -14,9 +17,10 @@ import org.knowm.xchange.dto.account.Wallet;
 import org.knowm.xchange.dto.account.Balance;
 import org.knowm.xchange.currency.Currency;
 import org.knowm.xchange.dto.meta.CurrencyMetaData;
+import com.google.common.collect.Multimap;
 import java.util.Map;
-import java.util.TreeMap;
 import java.util.HashMap;
+import java.util.TreeMap;
 import java.util.Optional;
 import java.util.NoSuchElementException;
 import java.math.BigDecimal;
@@ -28,9 +32,11 @@ import java.math.BigDecimal;
 public class XChangeServiceImpl implements XChangeService {
 
     private final XChangeFactory xChangeFactory;
+    private final JsonHelper jh;
 
-    public XChangeServiceImpl(XChangeFactory xChangeFactory) {
+    public XChangeServiceImpl(XChangeFactory xChangeFactory, JsonHelper jh) {
         this.xChangeFactory = xChangeFactory;
+        this.jh = jh;
     }
 
     @Override
@@ -58,45 +64,42 @@ public class XChangeServiceImpl implements XChangeService {
     }
 
     @Override
-    public Map<String, Map<String, String>> getExchangeBalances(Map<String, String> params) {
+    public ObjectNode getExchangeBalances(Map<String, String> params) {
         Optional<AccountService> accountService;
         Optional<AccountInfo> accountInfo;
         Optional<Map<String, Wallet>> wallets;
-        Map<String, Map<String, String>> balanceMap;
-        Map<String, Map<String, String>> errorMap;
-        Map<String, String> nestedErrorMap;
-        errorMap = new HashMap<>();
+        ObjectNode balanceMap = jh.getObjectNode();
+        ObjectNode errorMap = jh.getObjectNode();
 
         try {
-            balanceMap = new HashMap<>();
             xChangeFactory.setProperties(params);
             accountService = Optional.ofNullable(xChangeFactory.getAccountService(params.get("exchange")));
             if (!accountService.isPresent()){
-                errorMap.put("ERROR", new HashMap(){{put(params.get("exchange"),"No such account service");}});
+                errorMap.put("ERROR", params.get("exchange") + "No such account service");
                 return errorMap;
             }
 
             try {
                 accountInfo = Optional.ofNullable(accountService.get().getAccountInfo());
                 if (!accountInfo.isPresent()){
-                    errorMap.put("ERROR", new HashMap(){{put(params.get("exchange"), "No such account info");}});
+                    errorMap.put("ERROR", params.get("exchange") + "No such account info");
                     return errorMap;
                 }
             } catch (Exception ex) {
-                errorMap.put("ERROR", new HashMap(){{put(params.get("exchange"), ex.toString() + ": " + ex.getMessage());}});
+                errorMap.put("ERROR", params.get("exchange") + ex.toString() + ": " + ex.getMessage());
                 return errorMap;
             }
 
             wallets = Optional.ofNullable(accountInfo.get().getWallets());
             if (!wallets.isPresent()){
-                errorMap.put("ERROR", new HashMap(){{put(params.get("exchange"), "No such wallets");}});
+                errorMap.put("ERROR", params.get("exchange") + "No such wallets");
                 return errorMap;
             }
 
             balanceMap = jsonifyBalances(wallets.get(), params.get("exchange"));
         } catch (XChangeServiceException ex) {
             // import java.time.LocalDateTime;
-            errorMap.put("ERROR", new HashMap(){{put(params.get("exchange"), ex.toString() + ": " + ex.getMessage());}});
+            errorMap.put("ERROR", params.get("exchange") + ex.toString() + ": " + ex.getMessage());
             return errorMap;
         }
         log.debug("balancemap " + balanceMap);
@@ -139,10 +142,11 @@ public class XChangeServiceImpl implements XChangeService {
         return json;
     }
 
-    private Map<String, Map<String, String>> jsonifyBalances(Map<String, Wallet> wallets, String exchange) {
-        Map<String, Map<String, String>> json = new HashMap<>();
-        Map<String, String> nestedJson = new HashMap<>();
-        Map<String, Map<String, String>> errorMap = new HashMap<>();
+    private ObjectNode jsonifyBalances(Map<String, Wallet> wallets, String exchange) {
+        ObjectNode json = jh.getObjectNode();
+        ObjectNode json1 = jh.getObjectNode();
+        ObjectNode json2 = jh.getObjectNode();
+        ObjectNode errorMap = jh.getObjectNode();
         Optional<String> walletString;
         Optional<Wallet> wallet;
         Optional<String> walletName;
@@ -171,27 +175,36 @@ public class XChangeServiceImpl implements XChangeService {
                     if (wallet.isPresent()){
                         for (Map.Entry<Currency, Balance> balanceEntry : wallet.get().getBalances().entrySet()) {
                             currencyCode = "";
-                            balanceAvailable = "";
                             currency = Optional.ofNullable(balanceEntry.getKey());
                             balance = Optional.ofNullable(balanceEntry.getValue());
                             if (currency.isPresent())
                                 currencyCode = currency.get().getCurrencyCode();
-                            if (balance.isPresent())
-                                balanceAvailable = balance.get().getAvailable().toString();
+                            if (balance.isPresent()) {
+                                json.put("available", balance.get().getAvailable().toString());
+                                json.put("availableForWithdraw", balance.get().getAvailableForWithdrawal().toString());
+                                json.put("borrowed", balance.get().getBorrowed().toString());
+                                json.put("depositing", balance.get().getDepositing().toString());
+                                json.put("frozen", balance.get().getFrozen().toString());
+                                json.put("loaned", balance.get().getLoaned().toString());
+                                json.put("total", balance.get().getTotal().toString());
+                                json.put("withdrawing", balance.get().getWithdrawing().toString());
+                                json1.put(currencyCode, json);
+                            } else {
+                                json1.put(currencyCode, "");
+                            }
 
+                            //TODO what happens if pipeline gets bad data
                             //TODO getName or getId?
-                            nestedJson.put(currencyCode, balanceAvailable);
-
                             walletValue = Optional.ofNullable(entry.getValue().getId());
                             if(walletValue.isPresent()){
-                                json.put(walletValue.get(), nestedJson);
+                                json2.put(walletValue.get(), json1);
                             } else {
-                                json.put("wallet", nestedJson);
+                                json2.put("wallet " + currencyCode, json1);
                             }
                         }
                     } else {
-                        nestedJson.put(currencyCode, balanceAvailable);
-                        json.put("ERROR", nestedJson);
+                        errorMap.put("ERROR", "no wallets");
+                        return errorMap;
                     }
                 } catch(NoSuchElementException e) {
                     log.error("No currency code found from currency ", key);
@@ -201,9 +214,9 @@ public class XChangeServiceImpl implements XChangeService {
         } catch (RuntimeException re) {
             log.error("Non-retryable error occurred while processing exchange {}.",
                     exchange);
-            errorMap.put("ERROR", new HashMap(){{put(exchange, "Falied to retrieve contents of exchange");}});
+            errorMap.put("ERROR", exchange + "Falied to retrieve contents of exchange");
             return errorMap;
         }
-        return json;
+        return json2;
     }
 }

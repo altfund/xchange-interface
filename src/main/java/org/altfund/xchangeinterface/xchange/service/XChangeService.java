@@ -4,6 +4,7 @@ import org.altfund.xchangeinterface.xchange.model.Exchange;
 import org.knowm.xchange.currency.Currency;
 import org.knowm.xchange.dto.meta.CurrencyMetaData;
 import org.altfund.xchangeinterface.xchange.service.exceptions.XChangeServiceException;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.util.Map;
 
 /**
@@ -12,6 +13,6 @@ import java.util.Map;
 public interface XChangeService {
 
     Map<String, String> getExchangeCurrencies(String exhange);
-    Map<String, Map<String, String>> getExchangeBalances(Map<String, String> params);
+    ObjectNode getExchangeBalances(Map<String, String> params);
 
 }

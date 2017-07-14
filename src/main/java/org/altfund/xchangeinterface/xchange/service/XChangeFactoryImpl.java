@@ -75,24 +75,6 @@ public class XChangeFactoryImpl implements XChangeFactory { // EnvironmentAware,
         this.exchangeMap = Collections.unmodifiableMap(exchangeMap);
     }
 
-    //@Override
-    //public void afterPropertiesSet() throws Exception {
-    //    Map<Exchange, org.knowm.xchange.Exchange> exchangeMap = new LinkedHashMap<>();
-
-    //    for (Exchange exchange : Exchange.values()) {
-    //        ExchangeSpecification exchangeSpecification = createExchangeSpecification(exchange);
-    //        try {
-    //            exchangeMap.put(exchange, ExchangeFactory.INSTANCE.createExchange(exchangeSpecification));
-    //            log.info("Added exchange " + exchange);
-    //        } catch (ExchangeException ee) {
-    //            //TODO NEEDS TO BE CAUGHT AND REPORTED TO CONSUMER
-    //            log.error("Couldn't create XChange " + exchange, ee);
-    //        }
-    //    }
-
-    //    this.exchangeMap = Collections.unmodifiableMap(exchangeMap);
-    //}
-
     @Override
     public Set<Exchange> getExchanges() {
         return exchangeMap.keySet();
