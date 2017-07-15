@@ -17,7 +17,6 @@ import org.knowm.xchange.dto.account.Wallet;
 import org.knowm.xchange.dto.account.Balance;
 import org.knowm.xchange.currency.Currency;
 import org.knowm.xchange.dto.meta.CurrencyMetaData;
-import com.google.common.collect.Multimap;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.TreeMap;
