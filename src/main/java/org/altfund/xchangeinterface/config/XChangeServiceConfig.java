@@ -8,9 +8,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.altfund.xchangeinterface.restApi.currency.CurrencyController;
 import org.altfund.xchangeinterface.restApi.balance.BalanceController;
-import org.altfund.xchangeinterface.restApi.test.TestEndPointController;
 import org.altfund.xchangeinterface.util.JsonHelper;
-import org.altfund.xchangeinterface.util.Pipeline;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -55,8 +53,8 @@ public class XChangeServiceConfig {
     return new JsonHelper(jsonNodeFactory, objectMapper);
   }
 
-  @Bean
-  public TestEndPointController testEndPointController(JsonHelper jh) {
-    return new TestEndPointController(jh);
-  }
+  //@Bean
+  //public TestEndPointController testEndPointController(JsonHelper jh) {
+  //  return new TestEndPointController(jh);
+  //}
 }
