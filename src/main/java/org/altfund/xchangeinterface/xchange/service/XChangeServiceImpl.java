@@ -229,14 +229,14 @@ public class XChangeServiceImpl implements XChangeService {
                             if (currency.isPresent())
                                 currencyCode = currency.get().getCurrencyCode();
                             if (balance.isPresent()) {
-                                json.put("available", balance.get().getAvailable().toString());
-                                json.put("availableForWithdraw", balance.get().getAvailableForWithdrawal().toString());
-                                json.put("borrowed", balance.get().getBorrowed().toString());
-                                json.put("depositing", balance.get().getDepositing().toString());
-                                json.put("frozen", balance.get().getFrozen().toString());
-                                json.put("loaned", balance.get().getLoaned().toString());
-                                json.put("total", balance.get().getTotal().toString());
-                                json.put("withdrawing", balance.get().getWithdrawing().toString());
+                                json.put("available", balance.get().getAvailable());
+                                json.put("availableForWithdraw", balance.get().getAvailableForWithdrawal());
+                                json.put("borrowed", balance.get().getBorrowed());
+                                json.put("depositing", balance.get().getDepositing());
+                                json.put("frozen", balance.get().getFrozen());
+                                json.put("loaned", balance.get().getLoaned());
+                                json.put("total", balance.get().getTotal());
+                                json.put("withdrawing", balance.get().getWithdrawing());
                                 json1.put(currencyCode, json);
                             } else {
                                 json1.put(currencyCode, "");
