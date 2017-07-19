@@ -14,5 +14,6 @@ public interface XChangeService {
 
     Map<String, String> getExchangeCurrencies(String exhange);
     ObjectNode getExchangeBalances(Map<String, String> params);
+    ObjectNode getExchangeTradeFees(Map<String, String> params);
 
 }

@@ -1,4 +1,4 @@
-package org.altfund.xchangeinterface.restApi.balance;
+package org.altfund.xchangeinterface.restApi.tradefees;
 
 import java.util.Map;
 import org.springframework.http.ResponseEntity;
@@ -19,18 +19,18 @@ import com.fasterxml.jackson.core.JsonProcessingException;
  * @RequestMapping(method=GET) to narrow this mapping.
  */
 @RestController
-public class BalanceController {
+public class TradeFeesController {
     private final XChangeService xChangeService;
     private final JsonHelper jh;
 
-    public BalanceController(XChangeService xChangeService, JsonHelper jh) {
+    public TradeFeesController(XChangeService xChangeService, JsonHelper jh) {
         this.xChangeService = xChangeService;
         this.jh = jh;
     }
 
-    @RequestMapping(value = "/balance", produces = "application/json")
+    @RequestMapping(value = "/tradefees", produces = "application/json")
     public ResponseEntity<String> balance(@RequestParam Map<String, String> params) {
-        ObjectNode json = xChangeService.getExchangeBalances(params);
+        ObjectNode json = xChangeService.getExchangeTradeFees(params);
         String response = "";
         try {
             response = jh.getObjectMapper().writeValueAsString(json);

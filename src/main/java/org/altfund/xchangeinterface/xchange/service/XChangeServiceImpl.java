@@ -17,7 +17,8 @@ import org.knowm.xchange.dto.account.Wallet;
 import org.knowm.xchange.dto.account.Balance;
 import org.knowm.xchange.currency.Currency;
 import org.knowm.xchange.dto.meta.CurrencyMetaData;
-import com.google.common.collect.Multimap;
+import org.knowm.xchange.currency.CurrencyPair;
+import org.knowm.xchange.dto.meta.CurrencyPairMetaData;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.TreeMap;
@@ -64,10 +65,34 @@ public class XChangeServiceImpl implements XChangeService {
     }
 
     @Override
+    public ObjectNode getExchangeTradeFees(Map<String, String> params) {
+        Optional<ExchangeMetaData>  metaData;
+        ObjectNode tradeMap = jh.getObjectNode();
+        ObjectNode errorMap = jh.getObjectNode();
+
+        try {
+            xChangeFactory.setProperties(params.get("exchange"));
+            metaData = Optional.ofNullable(xChangeFactory.getExchangeMetaData(params.get("exchange")));
+            if (!metaData.isPresent()){
+                errorMap.put("ERROR", "No such exchange " + params.get("exchange"));
+                return errorMap;
+            }
+
+            tradeMap =  jsonifyTradeFees(metaData.get().getCurrencyPairs(), params.get("exchange"));
+        } catch (XChangeServiceException ex) {
+            // import java.time.LocalDateTime;
+            errorMap.put("ERROR", ex.getMessage());
+            return errorMap;
+        }
+        return tradeMap;
+    }
+
+    @Override
     public ObjectNode getExchangeBalances(Map<String, String> params) {
         Optional<AccountService> accountService;
         Optional<AccountInfo> accountInfo;
         Optional<Map<String, Wallet>> wallets;
+        Optional<BigDecimal> tradingFee;
         ObjectNode balanceMap = jh.getObjectNode();
         ObjectNode errorMap = jh.getObjectNode();
 
@@ -137,6 +162,30 @@ public class XChangeServiceImpl implements XChangeService {
             log.error("Non-retryable error occurred while processing exchange {}.",
                     exchange);
             errorMap.put("ERROR, Falied to retrieve contents of exchange", exchange );
+            return errorMap;
+        }
+        return json;
+    }
+
+    private ObjectNode jsonifyTradeFees(Map<CurrencyPair, CurrencyPairMetaData> currencyPairs, String exchange) {
+        ObjectNode errorMap = jh.getObjectNode();
+        ObjectNode json = jh.getObjectNode();
+        ObjectNode innerJson;
+
+        try {
+            for (Map.Entry<CurrencyPair, CurrencyPairMetaData> entry : currencyPairs.entrySet()) {
+                innerJson = jh.getObjectNode();
+                innerJson.put("max", entry.getValue().getMaximumAmount());
+                innerJson.put("min", entry.getValue().getMinimumAmount());
+                innerJson.put("priceScale", entry.getValue().getPriceScale());
+                innerJson.put("tradeFee", entry.getValue().getTradingFee());
+                json.put(entry.getKey().toString(), innerJson);
+            }
+
+        } catch (RuntimeException re) {
+            log.error("Non-retryable error occurred while processing exchange {}.",
+                    exchange);
+            errorMap.put("ERROR", exchange + "Falied to retrieve contents of exchange");
             return errorMap;
         }
         return json;
