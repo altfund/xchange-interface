@@ -192,33 +192,35 @@ public class XChangeServiceImpl implements XChangeService {
     }
 
     private ObjectNode jsonifyBalances(Map<String, Wallet> wallets, String exchange) {
-        ObjectNode json = jh.getObjectNode();
-        ObjectNode json1 = jh.getObjectNode();
-        ObjectNode json2 = jh.getObjectNode();
+        ObjectNode innerJson = jh.getObjectNode();
+        ObjectNode outerJson = jh.getObjectNode();
         ObjectNode errorMap = jh.getObjectNode();
+        ObjectNode json;
         Optional<String> walletString;
-        Optional<Wallet> wallet;
+        Optional<String> walletId;
         Optional<String> walletName;
+        Optional<Wallet> wallet;
         String key;
-        String value;
         Optional<Currency> currency;
         Optional<Balance> balance;
-        Optional<String> walletValue;
+        //Optional<String> walletValue;
         String currencyCode;
         String balanceAvailable;
 
         try {
             for (Map.Entry<String, Wallet> entry : wallets.entrySet()) {
                 key = "";
-                value = "";
-
                 try {
-                    walletString = Optional.ofNullable(entry.getKey());
                     wallet = Optional.ofNullable(entry.getValue());
-                    walletName = Optional.ofNullable(entry.getValue().getName());
+                    walletName = Optional.ofNullable(wallet.get().getName());
+                    walletString = Optional.ofNullable(entry.getKey());
+                    walletId = Optional.ofNullable(wallet.get().getId());
 
-                    key = walletString.orElse("");
-                    value = walletName.orElse("");
+                    key = walletName.orElse(
+                            walletString.orElse(
+                                    walletId.orElse("wallet")
+                                )
+                            );
                     currencyCode = "";
                     balanceAvailable = "";
                     if (wallet.isPresent()){
@@ -226,39 +228,26 @@ public class XChangeServiceImpl implements XChangeService {
                             currencyCode = "";
                             currency = Optional.ofNullable(balanceEntry.getKey());
                             balance = Optional.ofNullable(balanceEntry.getValue());
+                            json = getWalletBalances(currency, balance);
                             if (currency.isPresent())
                                 currencyCode = currency.get().getCurrencyCode();
-                            if (balance.isPresent()) {
-                                json.put("available", balance.get().getAvailable());
-                                json.put("availableForWithdraw", balance.get().getAvailableForWithdrawal());
-                                json.put("borrowed", balance.get().getBorrowed());
-                                json.put("depositing", balance.get().getDepositing());
-                                json.put("frozen", balance.get().getFrozen());
-                                json.put("loaned", balance.get().getLoaned());
-                                json.put("total", balance.get().getTotal());
-                                json.put("withdrawing", balance.get().getWithdrawing());
-                                json1.put(currencyCode, json);
-                            } else {
-                                json1.put(currencyCode, "");
-                            }
+                            innerJson.put(currencyCode, json);
 
-                            //TODO what happens if pipeline gets bad data
-                            //TODO getName or getId?
-                            walletValue = Optional.ofNullable(entry.getValue().getId());
-                            if(walletValue.isPresent()){
-                                json2.put(walletValue.get(), json1);
-                            } else {
-                                json2.put("wallet " + currencyCode, json1);
-                            }
-                        }
+
+                            log.info("a balance " + json.toString());
+                        }//end loop for balances of currency
+                        outerJson.put(key, innerJson);
                     } else {
                         errorMap.put("ERROR", "no wallets");
                         return errorMap;
-                    }
+                    }//no loop needed for balances
+                    outerJson.put(key, innerJson);
                 } catch(NoSuchElementException e) {
-                    log.error("No currency code found from currency ", key);
+                    log.error("No balances found for wallet ", key);
+                    errorMap.put("ERROR", exchange + "Falied to retrieve contents of wallets in exchange");
+                    return errorMap;
                 }
-            }
+            } //end wallet loop
             log.info("Processed exchange currency {} successfully.", exchange);
         } catch (RuntimeException re) {
             log.error("Non-retryable error occurred while processing exchange {}.",
@@ -266,6 +255,22 @@ public class XChangeServiceImpl implements XChangeService {
             errorMap.put("ERROR", exchange + "Falied to retrieve contents of exchange");
             return errorMap;
         }
-        return json2;
+        return outerJson;
+    }
+    private ObjectNode getWalletBalances(Optional<Currency> currency, Optional<Balance> balance){
+        String currencyCode = "";
+        ObjectNode json = jh.getObjectNode();
+        ObjectNode outerJson = jh.getObjectNode();
+        if (balance.isPresent()) {
+            json.put("available", balance.get().getAvailable());
+            json.put("availableForWithdraw", balance.get().getAvailableForWithdrawal());
+            json.put("borrowed", balance.get().getBorrowed());
+            json.put("depositing", balance.get().getDepositing());
+            json.put("frozen", balance.get().getFrozen());
+            json.put("loaned", balance.get().getLoaned());
+            json.put("total", balance.get().getTotal());
+            json.put("withdrawing", balance.get().getWithdrawing());
+        }
+        return json;
     }
 }
