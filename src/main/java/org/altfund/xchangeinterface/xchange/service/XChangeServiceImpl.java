@@ -10,6 +10,7 @@ import org.knowm.xchange.exceptions.ExchangeException;
 import org.knowm.xchange.exceptions.NotAvailableFromExchangeException;
 import org.knowm.xchange.exceptions.NotYetImplementedForExchangeException;
 import org.altfund.xchangeinterface.xchange.model.Exchange;
+import org.knowm.xchange.dto.marketdata.Ticker;
 import org.knowm.xchange.dto.meta.ExchangeMetaData;
 import org.knowm.xchange.service.account.AccountService;
 import org.knowm.xchange.dto.account.AccountInfo;
@@ -19,7 +20,9 @@ import org.knowm.xchange.currency.Currency;
 import org.knowm.xchange.dto.meta.CurrencyMetaData;
 import org.knowm.xchange.currency.CurrencyPair;
 import org.knowm.xchange.dto.meta.CurrencyPairMetaData;
+import org.knowm.xchange.service.marketdata.MarketDataService;
 import java.util.Map;
+import java.util.List;
 import java.util.HashMap;
 import java.util.TreeMap;
 import java.util.Optional;
@@ -62,6 +65,35 @@ public class XChangeServiceImpl implements XChangeService {
             return errorMap;
         }
         return currencyMap;
+    }
+
+    public ObjectNode getTickers(String exchange) {
+        Optional<List<CurrencyPair>>  currencyPairs;
+        Optional<MarketDataService>  marketDataService;
+        ObjectNode tickerMap = jh.getObjectNode();
+        ObjectNode errorMap = jh.getObjectNode();
+
+        try {
+            xChangeFactory.setProperties(exchange);
+            currencyPairs = Optional.ofNullable(xChangeFactory.getExchangeSymbols(exchange));
+            if (!currencyPairs.isPresent()){
+                errorMap.put("ERROR", "No such exchange " + exchange);
+                return errorMap;
+            }
+
+            marketDataService = Optional.ofNullable(xChangeFactory.getMarketDataService(exchange));
+            if (!marketDataService.isPresent()){
+                errorMap.put("ERROR", "No such exchange " + exchange);
+                return errorMap;
+            }
+
+            tickerMap =  jsonifyExchangeTickers(currencyPairs.get(), marketDataService.get(), exchange);
+        } catch (XChangeServiceException ex) {
+            // import java.time.LocalDateTime;
+            errorMap.put("ERROR", ex.getMessage());
+            return errorMap;
+        }
+        return tickerMap;
     }
 
     @Override
@@ -167,6 +199,38 @@ public class XChangeServiceImpl implements XChangeService {
         return json;
     }
 
+    private ObjectNode jsonifyExchangeTickers(
+            List<CurrencyPair> currencyPairs,
+            MarketDataService marketDataService,
+            String exchange) throws XChangeServiceException {
+
+        ObjectNode errorMap = jh.getObjectNode();
+        ObjectNode json = jh.getObjectNode();
+        ObjectNode innerJson;
+        Ticker ticker = null;
+
+        try {
+            for (CurrencyPair cp : currencyPairs) {
+                innerJson = jh.getObjectNode();
+
+                try {
+                    ticker = marketDataService.getTicker(cp);
+                    innerJson = jh.getObjectMapper().convertValue(ticker, ObjectNode.class);
+                    json.put(cp.toString(), innerJson);
+                } catch (Exception e) {
+                    json.put(cp.toString(), translateException(e));
+                }
+            }
+
+        } catch (RuntimeException re) {
+            log.error("Non-retryable error occurred while processing exchange {}.",
+                    exchange);
+            errorMap.put("ERROR","Falied to retrieve contents of exchange " + exchange );
+            return errorMap;
+        }
+        return json;
+            }
+
     private ObjectNode jsonifyTradeFees(Map<CurrencyPair, CurrencyPairMetaData> currencyPairs, String exchange) {
         ObjectNode errorMap = jh.getObjectNode();
         ObjectNode json = jh.getObjectNode();
@@ -218,7 +282,7 @@ public class XChangeServiceImpl implements XChangeService {
 
                     key = walletName.orElse(
                             walletString.orElse(
-                                    walletId.orElse("wallet")
+                                walletId.orElse("wallet")
                                 )
                             );
                     currencyCode = "";
@@ -273,4 +337,29 @@ public class XChangeServiceImpl implements XChangeService {
         }
         return json;
     }
+
+    private ObjectNode translateException(Exception e) {
+        ObjectNode errorMap = jh.getObjectNode();
+        if (e instanceof IOException) {
+            // Orders failed due to a network error can be retried.
+            errorMap.put("ERROR", "Indication that a networking error occurred while fetching JSON data kwhite applying getTicker on exchange " );
+            return errorMap;
+        } else if (e instanceof ExchangeException) {
+            errorMap.put("ERROR", "Indication that the exchange reported some kind of error with the request or response white applying getTicker on exchange " );
+            return errorMap;
+        } else if (e instanceof IllegalArgumentException) {
+            errorMap.put("ERROR", "Illegal argument exception white applying getTicker on exchange " );
+            return errorMap;
+        } else if (e instanceof NotAvailableFromExchangeException) {
+            errorMap.put("ERROR", "Indication that the exchange does not support the requested function or data white applying getTicker on exchange " );
+            return errorMap;
+        } else if (e instanceof NotYetImplementedForExchangeException) {
+            errorMap.put("ERROR", "Indication that the exchange supports the requested function or data, but it has not yet been implemented white applying getTicker on exchange " );
+            return errorMap;
+        } else {
+            errorMap.put("ERROR", "Unknown error white applying getTicker on exchange " );
+            return errorMap;
+        }
+    }
+
 }

@@ -3,12 +3,15 @@ package org.altfund.xchangeinterface.xchange.service;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 import lombok.extern.slf4j.Slf4j;
 import org.altfund.xchangeinterface.xchange.service.exceptions.XChangeServiceException;
 import org.altfund.xchangeinterface.xchange.model.Exchange;
+import org.knowm.xchange.service.marketdata.MarketDataService;
+import org.knowm.xchange.currency.CurrencyPair;
 import org.knowm.xchange.ExchangeFactory;
 import org.knowm.xchange.ExchangeSpecification;
 import org.knowm.xchange.exceptions.ExchangeException;
@@ -34,13 +37,13 @@ public class XChangeFactoryImpl implements XChangeFactory { // EnvironmentAware,
         Map<Exchange, org.knowm.xchange.Exchange> exchangeMap = new LinkedHashMap<>();
 
         for (Exchange exchange : Exchange.values()) {
-            log.info("For exchange " + exchange.getExchangeClassName());
-            log.info("requested  " + exchangeName);
+            log.debug("For exchange " + exchange.getExchangeClassName());
+            log.debug("requested  " + exchangeName);
             if (exchange.getExchangeClassName().contains(exchangeName)) {
                 ExchangeSpecification exchangeSpecification = createExchangeSpecification(exchange);
                 try {
                     exchangeMap.put(exchange, ExchangeFactory.INSTANCE.createExchange(exchangeSpecification));
-                    log.info("Added exchange " + exchange);
+                    log.debug("Added exchange " + exchange);
                 } catch (ExchangeException ee) {
                     //TODO NEEDS TO BE CAUGHT AND REPORTED TO CONSUMER
                     log.error("Couldn't create XChange " + exchange, ee);
@@ -65,7 +68,7 @@ public class XChangeFactoryImpl implements XChangeFactory { // EnvironmentAware,
                 ExchangeSpecification exchangeSpecification = createExchangeSpecification(exchange, params);
                 try {
                     exchangeMap.put(exchange, ExchangeFactory.INSTANCE.createExchange(exchangeSpecification));
-                    log.info("Added exchange " + exchange);
+                    log.debug("Added exchange " + exchange);
                 } catch (ExchangeException ee) {
                     //TODO NEEDS TO BE CAUGHT AND REPORTED TO CONSUMER
                     log.error("Couldn't create XChange " + exchange, ee);
@@ -95,6 +98,26 @@ public class XChangeFactoryImpl implements XChangeFactory { // EnvironmentAware,
         for (Map.Entry<Exchange, org.knowm.xchange.Exchange> entry : exchangeMap.entrySet()) {
             if (entry.getKey().getExchangeClassName().contains(exchangeName)) {
                 return entry.getValue().getExchangeMetaData();
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public List<CurrencyPair> getExchangeSymbols(String exchangeName) {
+        for (Map.Entry<Exchange, org.knowm.xchange.Exchange> entry : exchangeMap.entrySet()) {
+            if (entry.getKey().getExchangeClassName().contains(exchangeName)) {
+                return entry.getValue().getExchangeSymbols();
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public MarketDataService getMarketDataService(String exchangeName) {
+        for (Map.Entry<Exchange, org.knowm.xchange.Exchange> entry : exchangeMap.entrySet()) {
+            if (entry.getKey().getExchangeClassName().contains(exchangeName)) {
+                return entry.getValue().getMarketDataService();
             }
         }
         return null;
