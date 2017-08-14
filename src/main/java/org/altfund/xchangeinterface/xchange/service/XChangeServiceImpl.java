@@ -12,6 +12,7 @@ import org.knowm.xchange.exceptions.NotYetImplementedForExchangeException;
 import org.altfund.xchangeinterface.xchange.model.Exchange;
 import org.knowm.xchange.dto.marketdata.Ticker;
 import org.knowm.xchange.dto.meta.ExchangeMetaData;
+import org.knowm.xchange.dto.marketdata.OrderBook;
 import org.knowm.xchange.service.account.AccountService;
 import org.knowm.xchange.dto.account.AccountInfo;
 import org.knowm.xchange.dto.account.Wallet;
@@ -94,6 +95,29 @@ public class XChangeServiceImpl implements XChangeService {
             return errorMap;
         }
         return tickerMap;
+    }
+
+    public ObjectNode getOrderBooks(Map<String, String> params) {
+        Optional<MarketDataService>  marketDataService;
+        ObjectNode orderBookMap = jh.getObjectNode();
+        ObjectNode errorMap = jh.getObjectNode();
+
+        try {
+            xChangeFactory.setProperties(params.get("exchange"));
+            marketDataService = Optional.ofNullable(xChangeFactory.getMarketDataService(params.get( "exchange" )));
+            if (!marketDataService.isPresent()){
+                errorMap.put("ERROR", "No such exchange " + params.get( "exchange" ));
+                return errorMap;
+            }
+
+            //params for this method are needed because it has "base_currency" and "quote_currency"
+            orderBookMap =  jsonifyOrderBooks(marketDataService.get(), params);
+        } catch (XChangeServiceException ex) {
+            // import java.time.LocalDateTime;
+            errorMap.put("ERROR", ex.getMessage());
+            return errorMap;
+        }
+        return orderBookMap;
     }
 
     @Override
@@ -229,7 +253,42 @@ public class XChangeServiceImpl implements XChangeService {
             return errorMap;
         }
         return json;
+    }
+
+    private ObjectNode jsonifyOrderBooks(
+            MarketDataService marketDataService,
+            Map<String, String> params) throws XChangeServiceException {
+
+        ObjectNode errorMap = jh.getObjectNode();
+        ObjectNode json = jh.getObjectNode();
+        ObjectNode innerJson;
+        OrderBook orderBook = null;
+        CurrencyPair cp = null;
+
+        try {
+            innerJson = jh.getObjectNode();
+            cp = new CurrencyPair(
+                    params.get("quote_currency"),
+                    params.get("base_currency")
+                    );
+            log.debug("currency pair submitted to order book {}.", cp.toString());
+
+            try {
+                orderBook = marketDataService.getOrderBook(cp);
+                innerJson = jh.getObjectMapper().convertValue(orderBook, ObjectNode.class);
+                json.put(cp.toString(), innerJson);
+            } catch (Exception e) {
+                json.put(cp.toString(), translateException(e));
             }
+
+        } catch (RuntimeException re) {
+            log.error("Non-retryable error occurred while processing exchange {}.",
+                    params.get( "exchange" ));
+            errorMap.put("ERROR","Falied to retrieve contents of exchange " + params.get("exchange"));
+            return errorMap;
+        }
+        return json;
+    }
 
     private ObjectNode jsonifyTradeFees(Map<CurrencyPair, CurrencyPairMetaData> currencyPairs, String exchange) {
         ObjectNode errorMap = jh.getObjectNode();
@@ -342,22 +401,22 @@ public class XChangeServiceImpl implements XChangeService {
         ObjectNode errorMap = jh.getObjectNode();
         if (e instanceof IOException) {
             // Orders failed due to a network error can be retried.
-            errorMap.put("ERROR", "Indication that a networking error occurred while fetching JSON data kwhite applying getTicker on exchange " );
+            errorMap.put("ERROR", "Indication that a networking error occurred while fetching JSON data while fetching requested data on exchange " );
             return errorMap;
         } else if (e instanceof ExchangeException) {
-            errorMap.put("ERROR", "Indication that the exchange reported some kind of error with the request or response white applying getTicker on exchange " );
+            errorMap.put("ERROR", "Indication that the exchange reported some kind of error with the request or response while fetching requested data on exchange " );
             return errorMap;
         } else if (e instanceof IllegalArgumentException) {
-            errorMap.put("ERROR", "Illegal argument exception white applying getTicker on exchange " );
+            errorMap.put("ERROR", "Illegal argument exception while fetching requested data on exchange " );
             return errorMap;
         } else if (e instanceof NotAvailableFromExchangeException) {
-            errorMap.put("ERROR", "Indication that the exchange does not support the requested function or data white applying getTicker on exchange " );
+            errorMap.put("ERROR", "Indication that the exchange does not support the requested function or data while fetching requested data on exchange " );
             return errorMap;
         } else if (e instanceof NotYetImplementedForExchangeException) {
-            errorMap.put("ERROR", "Indication that the exchange supports the requested function or data, but it has not yet been implemented white applying getTicker on exchange " );
+            errorMap.put("ERROR", "Indication that the exchange supports the requested function or data, but it has not yet been implemented while fetching requested data on exchange " );
             return errorMap;
         } else {
-            errorMap.put("ERROR", "Unknown error white applying getTicker on exchange " );
+            errorMap.put("ERROR", "Unknown error while fetching requested data on exchange " );
             return errorMap;
         }
     }
