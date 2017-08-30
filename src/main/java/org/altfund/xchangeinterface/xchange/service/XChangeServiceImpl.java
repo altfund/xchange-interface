@@ -2,6 +2,7 @@ package org.altfund.xchangeinterface.xchange.service;
 
 import java.io.IOException;
 import lombok.extern.slf4j.Slf4j;
+import org.altfund.xchangeinterface.xchange.model.ExchangeCredentials;
 import org.altfund.xchangeinterface.xchange.service.exceptions.XChangeServiceException;
 import org.altfund.xchangeinterface.util.JsonHelper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
@@ -144,7 +145,7 @@ public class XChangeServiceImpl implements XChangeService {
     }
 
     @Override
-    public ObjectNode getExchangeBalances(Map<String, String> params) {
+    public ObjectNode getExchangeBalances(ExchangeCredentials exchangeCredentials) {
         Optional<AccountService> accountService;
         Optional<AccountInfo> accountInfo;
         Optional<Map<String, Wallet>> wallets;
@@ -153,34 +154,34 @@ public class XChangeServiceImpl implements XChangeService {
         ObjectNode errorMap = jh.getObjectNode();
 
         try {
-            xChangeFactory.setProperties(params);
-            accountService = Optional.ofNullable(xChangeFactory.getAccountService(params.get("exchange")));
+            xChangeFactory.setProperties(exchangeCredentials);
+            accountService = Optional.ofNullable(xChangeFactory.getAccountService(exchangeCredentials.getExchange()));
             if (!accountService.isPresent()){
-                errorMap.put("ERROR", params.get("exchange") + "No such account service");
+                errorMap.put("ERROR", exchangeCredentials.getExchange() + "No such account service");
                 return errorMap;
             }
 
             try {
                 accountInfo = Optional.ofNullable(accountService.get().getAccountInfo());
                 if (!accountInfo.isPresent()){
-                    errorMap.put("ERROR", params.get("exchange") + "No such account info");
+                    errorMap.put("ERROR", exchangeCredentials.getExchange() + "No such account info");
                     return errorMap;
                 }
             } catch (Exception ex) {
-                errorMap.put("ERROR", params.get("exchange") + ex.toString() + ": " + ex.getMessage());
+                errorMap.put("ERROR", exchangeCredentials.getExchange() + ex.toString() + ": " + ex.getMessage());
                 return errorMap;
             }
 
             wallets = Optional.ofNullable(accountInfo.get().getWallets());
             if (!wallets.isPresent()){
-                errorMap.put("ERROR", params.get("exchange") + "No such wallets");
+                errorMap.put("ERROR", exchangeCredentials.getExchange() + "No such wallets");
                 return errorMap;
             }
 
-            balanceMap = jsonifyBalances(wallets.get(), params.get("exchange"));
+            balanceMap = jsonifyBalances(wallets.get(), exchangeCredentials.getExchange());
         } catch (XChangeServiceException ex) {
             // import java.time.LocalDateTime;
-            errorMap.put("ERROR", params.get("exchange") + ex.toString() + ": " + ex.getMessage());
+            errorMap.put("ERROR", exchangeCredentials.getExchange() + ex.toString() + ": " + ex.getMessage());
             return errorMap;
         }
         log.debug("balancemap " + balanceMap);

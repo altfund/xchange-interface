@@ -9,6 +9,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 import lombok.extern.slf4j.Slf4j;
 import org.altfund.xchangeinterface.xchange.service.exceptions.XChangeServiceException;
+import org.altfund.xchangeinterface.xchange.model.ExchangeCredentials;
 import org.altfund.xchangeinterface.xchange.model.Exchange;
 import org.knowm.xchange.service.marketdata.MarketDataService;
 import org.knowm.xchange.currency.CurrencyPair;
@@ -51,6 +52,30 @@ public class XChangeFactoryImpl implements XChangeFactory { // EnvironmentAware,
             }
         }
         this.exchangeMap = exchangeMap;
+    }
+
+    @Override
+    public void setProperties(ExchangeCredentials exchangeCredentials) {
+        Map<Exchange, org.knowm.xchange.Exchange> exchangeMap = new LinkedHashMap<>();
+
+        log.debug("\nGiven Parameters for exchange: " + exchangeCredentials.getExchange());
+        log.debug("key: " + exchangeCredentials.getKey());
+        log.debug("secret: " + exchangeCredentials.getSecret());
+        log.debug("passphrase: " + exchangeCredentials.getPassphrase());
+
+        for (Exchange exchange : Exchange.values()) {
+            if (exchange.getExchangeClassName().contains(exchangeCredentials.getExchange())) {
+                ExchangeSpecification exchangeSpecification = createExchangeSpecification(exchange, exchangeCredentials);
+                try {
+                    exchangeMap.put(exchange, ExchangeFactory.INSTANCE.createExchange(exchangeSpecification));
+                    log.debug("Added exchange " + exchange);
+                } catch (ExchangeException ee) {
+                    //TODO NEEDS TO BE CAUGHT AND REPORTED TO CONSUMER
+                    log.error("Couldn't create XChange " + exchange, ee);
+                }
+            }
+        }
+        this.exchangeMap = Collections.unmodifiableMap(exchangeMap);
     }
 
     @Override
@@ -159,6 +184,20 @@ public class XChangeFactoryImpl implements XChangeFactory { // EnvironmentAware,
         //    log.debug("exchange specific object " + entry.getValue().toString());
         //    exchangeSpecification.setExchangeSpecificParametersItem(entry.getKey(), params.get(entry.getKey()));
         //}
+        return exchangeSpecification;
+    }
+
+    protected ExchangeSpecification createExchangeSpecification(Exchange exchange, ExchangeCredentials exchangeCredentials) {
+        String exchangeClassName = exchange.getExchangeClassName();
+        ExchangeSpecification exchangeSpecification = new ExchangeSpecification(exchangeClassName);
+
+        setExchangeProperty(exchange, "API_KEY", exchangeSpecification::setApiKey, exchangeCredentials.getKey());
+        setExchangeProperty(exchange, "SECRET_KEY", exchangeSpecification::setSecretKey, exchangeCredentials.getSecret());
+        if (exchangeCredentials.getPassphrase() != null || exchangeCredentials.getPassphrase() != "")
+            exchangeSpecification.setExchangeSpecificParametersItem("passphrase", exchangeCredentials.getPassphrase());
+        else
+            exchangeSpecification.setExchangeSpecificParametersItem("passphrase","");
+
         return exchangeSpecification;
     }
 

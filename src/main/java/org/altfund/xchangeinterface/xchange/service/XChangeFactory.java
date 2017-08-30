@@ -9,6 +9,7 @@ import org.knowm.xchange.dto.meta.ExchangeMetaData;
 import org.knowm.xchange.service.account.AccountService;
 import org.knowm.xchange.service.marketdata.MarketDataService;
 import org.knowm.xchange.currency.CurrencyPair;
+import org.altfund.xchangeinterface.xchange.model.ExchangeCredentials;
 
 /**
  * altfund
@@ -24,5 +25,5 @@ public interface XChangeFactory {
   MarketDataService getMarketDataService(String exchangeName);
   void setProperties(String exchangeName);
   void setProperties(Map<String, String> params);
-
+  void setProperties(ExchangeCredentials exchangeCredentials);
 }

@@ -1,5 +1,6 @@
 package org.altfund.xchangeinterface.xchange.service;
 
+import org.altfund.xchangeinterface.xchange.model.ExchangeCredentials;
 import org.altfund.xchangeinterface.xchange.model.Exchange;
 import org.knowm.xchange.currency.Currency;
 import org.knowm.xchange.dto.meta.CurrencyMetaData;
@@ -15,7 +16,7 @@ public interface XChangeService {
     Map<String, String> getExchangeCurrencies(String exhange);
     ObjectNode getTickers(String exchange);
     ObjectNode getOrderBooks(Map<String, String> params);
-    ObjectNode getExchangeBalances(Map<String, String> params);
+    ObjectNode getExchangeBalances(ExchangeCredentials params);
     ObjectNode getExchangeTradeFees(Map<String, String> params);
 
 }
