@@ -19,12 +19,19 @@ import org.altfund.xchangeinterface.xchange.service.OrderDecryptor;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import javax.crypto.NoSuchPaddingException;
+import java.security.InvalidKeyException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.BadPaddingException;
+
+import lombok.extern.slf4j.Slf4j;
+
 /*
  * The above example does not specify GET vs. PUT, POST, and so forth, because
  * @RequestMapping maps all HTTP operations by default. Use
  * @RequestMapping(method=GET) to narrow this mapping.
  */
 @RestController
+@Slf4j
 public class BalanceController {
     private final XChangeService xChangeService;
     private final JsonHelper jh;
@@ -32,17 +39,25 @@ public class BalanceController {
     private OrderDecryptor orderDecryptor;
     private ExchangeCredentials exchangeCredentials;
 
-    public BalanceController(XChangeService xChangeService, JsonHelper jh) {
+    public BalanceController(XChangeService xChangeService, JsonHelper jh, OrderDecryptor orderDecryptor) {
         this.xChangeService = xChangeService;
         this.jh = jh;
+        this.orderDecryptor = orderDecryptor;
     }
 
     @RequestMapping(value = "/balance", produces = "application/json")
-    public ResponseEntity<String> balance(@RequestParam(value="params") String params) {
+    //public ResponseEntity<String> balance(@RequestParam String params) {
+    //public ResponseEntity<String> balance(@RequestParam(value="params") String params) {
+    public ResponseEntity<String> balance(@RequestParam Map<String, String> params) {
         String response = "";
         try {
-            encryptedOrder = jh.getObjectMapper().readValue(params, EncryptedOrder.class);
-            exchangeCredentials = jh.getObjectMapper().readValue(orderDecryptor.decrypt(encryptedOrder), ExchangeCredentials.class);
+            response = jh.getObjectMapper().writeValueAsString(params);
+            log.debug("rec str {}.", response);
+            encryptedOrder = jh.getObjectMapper().readValue(response, EncryptedOrder.class);
+            log.debug("rec iv {}.", encryptedOrder.getIv());
+            log.debug("rec data {}.", encryptedOrder.getEncryptedData());
+            exchangeCredentials = jh.getObjectMapper().readValue( orderDecryptor.decrypt(encryptedOrder),
+                                                                  ExchangeCredentials.class);
             //encrypted order needs to decrypt to a Map<String, String> :(
             //probs change that to a pojo like in ee.
             ObjectNode json = xChangeService.getExchangeBalances(exchangeCredentials);
@@ -57,10 +72,19 @@ public class BalanceController {
         catch (NoSuchPaddingException ex) {
             response = "{ERROR: NoSuchPaddingException (error with decryption) "+ ex.getMessage() + "}";
         }
+        catch (InvalidKeyException ex) {
+            response = "{ERROR: Invalid Key Exception (error with decryption) "+ ex.getMessage() + "}";
+        }
+        catch (IllegalBlockSizeException ex) {
+            response = "{ERROR: Invalid Key Exception (error with decryption) "+ ex.getMessage() + "}";
+        }
+        catch (BadPaddingException ex) {
+            response = "{ERROR: Invalid Key Exception (error with decryption) "+ ex.getMessage() + "}";
+        }
         //catch (JsonProcessingException ex) {
         //    response = "{ERROR: JsonProcessingException "+ ex.getMessage() + "}";
         //}
-        return new BalanceMap(response.replace("\\", ""));
+        //return new BalanceMap(response.replace("\\", ""));
         final HttpHeaders httpHeaders= new HttpHeaders();
         httpHeaders.setContentType(MediaType.APPLICATION_JSON);
         return new ResponseEntity<String>(response, httpHeaders, HttpStatus.OK);

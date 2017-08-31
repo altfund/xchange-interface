@@ -11,12 +11,18 @@ import org.altfund.xchangeinterface.restApi.balance.BalanceController;
 import org.altfund.xchangeinterface.util.JsonHelper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.altfund.xchangeinterface.xchange.service.OrderDecryptor;
 
 /**
  * altfund
  */
 @Configuration
 public class XChangeServiceConfig {
+
+  @Bean
+  public OrderDecryptor orderDecryptor() {
+    return new OrderDecryptor();
+  }
 
   @Bean
   public XChangeFactory xChangeFactory() {
@@ -29,8 +35,8 @@ public class XChangeServiceConfig {
   }
 
   @Bean
-  public BalanceController balanceController(XChangeService xChangeService, JsonHelper jh) {
-    return new BalanceController(xChangeService, jh);
+  public BalanceController balanceController(XChangeService xChangeService, JsonHelper jh, OrderDecryptor orderDecryptor) {
+    return new BalanceController(xChangeService, jh, orderDecryptor);
   }
 
   @Bean
