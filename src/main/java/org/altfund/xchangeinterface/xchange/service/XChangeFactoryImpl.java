@@ -82,10 +82,10 @@ public class XChangeFactoryImpl implements XChangeFactory { // EnvironmentAware,
     public void setProperties(Map<String, String> params) {
         Map<Exchange, org.knowm.xchange.Exchange> exchangeMap = new LinkedHashMap<>();
 
-        log.info("\nGiven Parameters for exchange: " + params.get("exchange"));
+        log.debug("\nGiven Parameters for exchange: " + params.get("exchange"));
         for (Map.Entry<String, String> entry : params.entrySet()) {
-            log.info("property: " + entry.getKey());
-            log.info("value: " + entry.getValue());
+            log.debug("property: " + entry.getKey());
+            log.debug("value: " + entry.getValue());
         }
 
         for (Exchange exchange : Exchange.values()) {
@@ -203,9 +203,9 @@ public class XChangeFactoryImpl implements XChangeFactory { // EnvironmentAware,
 
     protected void setExchangeProperty(
         Exchange exchange, String propertyName, Consumer<String> propertyConsumer, String property) {
-        log.info("props for exchange " + exchange.name());
+        log.debug("props for exchange " + exchange.name());
         String exchangePropertyName = (exchange.name() + "_" + propertyName).toUpperCase();
-        log.info("props " + exchangePropertyName);
+        log.debug("props " + exchangePropertyName);
 
         //Optional<String> exchangePropertyValue = Optional.ofNullable(environment.getProperty(exchangePropertyName));
         //TODO what?

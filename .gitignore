@@ -18,4 +18,3 @@ README.html
 Session.vim
 .env
 test/**
-src/main/resources/application.properties

@@ -358,7 +358,7 @@ public class XChangeServiceImpl implements XChangeService {
                             innerJson.put(currencyCode, json);
 
 
-                            log.info("a balance " + json.toString());
+                            log.debug("a balance " + json.toString());
                         }//end loop for balances of currency
                         outerJson.put(key, innerJson);
                     } else {
