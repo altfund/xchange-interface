@@ -172,10 +172,21 @@ public class XChangeFactoryImpl implements XChangeFactory {
         log.debug("\nGiven Parameters for exchange: " + exchangeCredentials.getExchange());
         for (Exchange exchange : Exchange.values()) {
             if (exchange.getExchangeClassName().contains(exchangeCredentials.getExchange())) {
-                ExchangeSpecification exchangeSpecification = createExchangeSpecification(exchange, exchangeCredentials);
+
+                Optional<org.knowm.xchange.Exchange> exchangeTry =
+                    Optional.ofNullable(exchangeMap.get(exchangeCredentials.getExchange()));
+
                 try {
-                    exchangeCredsMap.put(exchangeCredentials, ExchangeFactory.INSTANCE.createExchange(exchangeSpecification));
-                    log.debug("Added exchange " + exchange);
+                    ExchangeSpecification exchangeSpecification = createExchangeSpecification(exchange, exchangeCredentials);
+                    if (exchangeTry.isPresent()) {
+                        exchangeTry.get().applySpecification(exchangeSpecification);
+                        exchangeCredsMap.put(exchangeCredentials, exchangeTry.get());
+                        log.debug("apply specification " + exchange);
+                    }
+                    else {
+                        exchangeCredsMap.put(exchangeCredentials, ExchangeFactory.INSTANCE.createExchange(exchangeSpecification));
+                        log.debug("Added exchange " + exchange);
+                    }
                     return true;
                 } catch (ExchangeException ee) {
                     log.error("Couldn't create XChange " + exchange, ee);
