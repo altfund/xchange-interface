@@ -49,20 +49,25 @@ public class XChangeServiceImpl implements XChangeService {
     public Map<String, String> getExchangeCurrencies(String exchange) {
         Optional<ExchangeMetaData>  metaData;
         Map<String, String> currencyMap;
-        Map<String, String> errorMap;
+        Map<String, String> errorMap = new TreeMap<>();
         try {
-            xChangeFactory.setProperties(exchange);
+            //xChangeFactory.setProperties(exchange);
             metaData = Optional.ofNullable(xChangeFactory.getExchangeMetaData(exchange));
             if (!metaData.isPresent()){
-                errorMap = new TreeMap<>();
                 errorMap.put("ERROR", "No such exchange " + exchange);
                 return errorMap;
             }
 
             currencyMap =  jsonifyCurrencies(metaData.get().getCurrencies(), exchange);
-        } catch (XChangeServiceException ex) {
+        }
+        catch (XChangeServiceException ex) {
             // import java.time.LocalDateTime;
             errorMap = new TreeMap<>();
+            errorMap.put("ERROR", ex.getMessage());
+            return errorMap;
+        }
+        catch (IOException ex) {
+            // import java.time.LocalDateTime;
             errorMap.put("ERROR", ex.getMessage());
             return errorMap;
         }
@@ -76,7 +81,7 @@ public class XChangeServiceImpl implements XChangeService {
         ObjectNode errorMap = jh.getObjectNode();
 
         try {
-            xChangeFactory.setProperties(exchange);
+            //xChangeFactory.setProperties(exchange);
             currencyPairs = Optional.ofNullable(xChangeFactory.getExchangeSymbols(exchange));
             if (!currencyPairs.isPresent()){
                 errorMap.put("ERROR", "No such exchange " + exchange);
@@ -90,7 +95,13 @@ public class XChangeServiceImpl implements XChangeService {
             }
 
             tickerMap =  jsonifyExchangeTickers(currencyPairs.get(), marketDataService.get(), exchange);
-        } catch (XChangeServiceException ex) {
+        }
+        catch (IOException ex) {
+            // import java.time.LocalDateTime;
+            errorMap.put("ERROR", ex.getMessage());
+            return errorMap;
+        }
+        catch (XChangeServiceException ex) {
             // import java.time.LocalDateTime;
             errorMap.put("ERROR", ex.getMessage());
             return errorMap;
@@ -104,7 +115,7 @@ public class XChangeServiceImpl implements XChangeService {
         ObjectNode errorMap = jh.getObjectNode();
 
         try {
-            xChangeFactory.setProperties(params.get("exchange"));
+            //xChangeFactory.setProperties(params.get("exchange"));
             marketDataService = Optional.ofNullable(xChangeFactory.getMarketDataService(params.get( "exchange" )));
             if (!marketDataService.isPresent()){
                 errorMap.put("ERROR", "No such exchange " + params.get( "exchange" ));
@@ -113,7 +124,13 @@ public class XChangeServiceImpl implements XChangeService {
 
             //params for this method are needed because it has "base_currency" and "quote_currency"
             orderBookMap =  jsonifyOrderBooks(marketDataService.get(), params);
-        } catch (XChangeServiceException ex) {
+        }
+        catch (XChangeServiceException ex) {
+            // import java.time.LocalDateTime;
+            errorMap.put("ERROR", ex.getMessage());
+            return errorMap;
+        }
+        catch (IOException ex) {
             // import java.time.LocalDateTime;
             errorMap.put("ERROR", ex.getMessage());
             return errorMap;
@@ -128,7 +145,7 @@ public class XChangeServiceImpl implements XChangeService {
         ObjectNode errorMap = jh.getObjectNode();
 
         try {
-            xChangeFactory.setProperties(params.get("exchange"));
+            //xChangeFactory.setProperties(params.get("exchange"));
             metaData = Optional.ofNullable(xChangeFactory.getExchangeMetaData(params.get("exchange")));
             if (!metaData.isPresent()){
                 errorMap.put("ERROR", "No such exchange " + params.get("exchange"));
@@ -136,7 +153,13 @@ public class XChangeServiceImpl implements XChangeService {
             }
 
             tradeMap =  jsonifyTradeFees(metaData.get().getCurrencyPairs(), params.get("exchange"));
-        } catch (XChangeServiceException ex) {
+        }
+        catch (XChangeServiceException ex) {
+            // import java.time.LocalDateTime;
+            errorMap.put("ERROR", ex.getMessage());
+            return errorMap;
+        }
+        catch (IOException ex) {
             // import java.time.LocalDateTime;
             errorMap.put("ERROR", ex.getMessage());
             return errorMap;
@@ -154,8 +177,8 @@ public class XChangeServiceImpl implements XChangeService {
         ObjectNode errorMap = jh.getObjectNode();
 
         try {
-            xChangeFactory.setProperties(exchangeCredentials);
-            accountService = Optional.ofNullable(xChangeFactory.getAccountService(exchangeCredentials.getExchange()));
+            //xChangeFactory.setProperties(exchangeCredentials);
+            accountService = Optional.ofNullable(xChangeFactory.getAccountService(exchangeCredentials));
             if (!accountService.isPresent()){
                 errorMap.put("ERROR", exchangeCredentials.getExchange() + "No such account service");
                 return errorMap;
@@ -179,9 +202,15 @@ public class XChangeServiceImpl implements XChangeService {
             }
 
             balanceMap = jsonifyBalances(wallets.get(), exchangeCredentials.getExchange());
-        } catch (XChangeServiceException ex) {
+        }
+        catch (XChangeServiceException ex) {
             // import java.time.LocalDateTime;
             errorMap.put("ERROR", exchangeCredentials.getExchange() + ex.toString() + ": " + ex.getMessage());
+            return errorMap;
+        }
+        catch (IOException ex) {
+            // import java.time.LocalDateTime;
+            errorMap.put("ERROR", ex.getMessage());
             return errorMap;
         }
         log.debug("balancemap " + balanceMap);

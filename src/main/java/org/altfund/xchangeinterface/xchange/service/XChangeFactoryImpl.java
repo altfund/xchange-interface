@@ -18,172 +18,178 @@ import org.knowm.xchange.ExchangeSpecification;
 import org.knowm.xchange.exceptions.ExchangeException;
 import org.knowm.xchange.service.account.AccountService;
 import org.knowm.xchange.dto.meta.ExchangeMetaData;
-import org.springframework.beans.factory.InitializingBean;
-//import org.springframework.context.EnvironmentAware;
-//import org.springframework.core.env.Environment;
+import java.io.IOException;
 
 /**
  * altfund
  */
 @Slf4j
-public class XChangeFactoryImpl implements XChangeFactory { // EnvironmentAware, InitializingBean, XChangeFactory {
+public class XChangeFactoryImpl implements XChangeFactory {
 
-    //private Environment environment;
-    //TODO this is the wrong DS for this job know that this is set on a per
-    //req basis
-    private Map<Exchange, org.knowm.xchange.Exchange> exchangeMap;
+    private Map<String, org.knowm.xchange.Exchange> exchangeMap = new LinkedHashMap<>();
+    private Map<ExchangeCredentials, org.knowm.xchange.Exchange> exchangeCredsMap = new LinkedHashMap<>();
 
-    @Override
-    public void setProperties(String exchangeName) {
-        Map<Exchange, org.knowm.xchange.Exchange> exchangeMap = new LinkedHashMap<>();
+    private <T> T variableDispatch(XChangeDispatcher dispatcher, String exchangeName) throws XChangeServiceException, IOException{
+        // variable dispatch will emulate getTradeService but call dispatcher.comeback(exchange) instead.
+        // In order to handle not re-initializing exchanges all the time, it would be preferable
+        // to see how "apply specification" works it could be the case that it is better,
+        // and we only call remoteInit on an exchange when we get an error in order to
+        // see if a re-initialization would help. Either way, dispatcher.comeback(exchange)
+        // as a line is invaluable to genearlizing the cache-ing strategy. The avoidance
+        // or re-initialization for every exchange <=> credential pair would be highly desirable.
+        Optional<org.knowm.xchange.Exchange> exchangeFirstTry =
+            Optional.ofNullable(exchangeMap.get(exchangeName));
 
-        for (Exchange exchange : Exchange.values()) {
-            log.debug("For exchange " + exchange.getExchangeClassName());
-            log.debug("requested  " + exchangeName);
-            if (exchange.getExchangeClassName().contains(exchangeName)) {
-                ExchangeSpecification exchangeSpecification = createExchangeSpecification(exchange);
-                try {
-                    exchangeMap.put(exchange, ExchangeFactory.INSTANCE.createExchange(exchangeSpecification));
-                    log.debug("Added exchange " + exchange);
-                } catch (ExchangeException ee) {
-                    //TODO NEEDS TO BE CAUGHT AND REPORTED TO CONSUMER
-                    log.error("Couldn't create XChange " + exchange, ee);
+        if (!exchangeFirstTry.isPresent()) {
+            if (setProperties(exchangeName)) {
+                Optional<org.knowm.xchange.Exchange> exchangeSecondTry =
+                    Optional.ofNullable(exchangeMap.get(exchangeName));
+
+                if (!exchangeSecondTry.isPresent()) {
+                    throw new XChangeServiceException("Unknown exchange on second try: " + exchangeName);
                 }
+                else {
+                    log.debug("Adding new exchange {}, calling remote init manually.", exchangeName);
+                    try {
+                        exchangeSecondTry.get().remoteInit();
+                    }
+                    catch(IOException ex) {
+                        log.debug("IO ex on remoteInit {}.", ex.getMessage());
+                        throw ex;
+                    }
+                    catch(ExchangeException ex) {
+                        log.debug("exchange exception ex on remoteInit {}.", ex.getMessage());
+                        throw ex;
+                    }
+                    return dispatcher.comeback(exchangeSecondTry.get());
+                }
+            } else {
+                throw new XChangeServiceException("Unknown exchange, couldn't set properties with params: " + exchangeName);
             }
         }
-        this.exchangeMap = exchangeMap;
+        else {
+            log.debug("exchange {} already present for given creds.", exchangeName);
+            return dispatcher.comeback(exchangeFirstTry.get());
+        }
+    }
+
+    private <T> T variableDispatch(XChangeDispatcher dispatcher, ExchangeCredentials exchangeCredentials) throws XChangeServiceException, IOException{
+        // variable dispatch will emulate getTradeService but call dispatcher.comeback(exchange) instead.
+        // In order to handle not re-initializing exchanges all the time, it would be preferable
+        // to see how "apply specification" works it could be the case that it is better,
+        // and we only call remoteInit on an exchange when we get an error in order to
+        // see if a re-initialization would help. Either way, dispatcher.comeback(exchange)
+        // as a line is invaluable to genearlizing the cache-ing strategy. The avoidance
+        // or re-initialization for every exchange <=> credential pair would be highly desirable.
+        Optional<org.knowm.xchange.Exchange> exchangeFirstTry =
+            Optional.ofNullable(exchangeCredsMap.get(exchangeCredentials));
+
+        if (!exchangeFirstTry.isPresent()) {
+            if (setProperties(exchangeCredentials)) {
+                Optional<org.knowm.xchange.Exchange> exchangeSecondTry =
+                    Optional.ofNullable(exchangeCredsMap.get(exchangeCredentials));
+
+                if (!exchangeSecondTry.isPresent()) {
+                    throw new XChangeServiceException("Unknown exchange on second try: " + exchangeCredentials.getExchange());
+                }
+                else {
+                    log.debug("Adding new exchange {}, calling remote init manually.", exchangeCredentials.getExchange());
+                    try {
+                        exchangeSecondTry.get().remoteInit();
+                    }
+                    catch(IOException ex) {
+                        log.debug("IO ex on remoteInit {}.", ex.getMessage());
+                        throw ex;
+                    }
+                    catch(ExchangeException ex) {
+                        log.debug("exchange exception ex on remoteInit {}.", ex.getMessage());
+                        throw ex;
+                    }
+                    return dispatcher.comeback(exchangeSecondTry.get());
+                }
+            } else {
+                throw new XChangeServiceException("Unknown exchange, couldn't set properties with params: " + exchangeCredentials.getExchange());
+            }
+        }
+        else {
+            log.debug("exchange {} already present for given creds.", exchangeCredentials.getExchange());
+            return dispatcher.comeback(exchangeFirstTry.get());
+        }
+    }
+
+
+    @Override
+    public AccountService getAccountService(ExchangeCredentials exchangeCredentials) throws XChangeServiceException, IOException {
+        return variableDispatch(XChangeDispatcher.AccountServiceType, exchangeCredentials);
     }
 
     @Override
-    public void setProperties(ExchangeCredentials exchangeCredentials) {
-        Map<Exchange, org.knowm.xchange.Exchange> exchangeMap = new LinkedHashMap<>();
+    public ExchangeMetaData getExchangeMetaData(String exchangeName) throws XChangeServiceException, IOException{
+        return variableDispatch(XChangeDispatcher.ExchangeCurrencyType, exchangeName);
+    }
+
+    @Override
+    public List<CurrencyPair> getExchangeSymbols(String exchangeName) throws XChangeServiceException, IOException{
+        return variableDispatch(XChangeDispatcher.ExchangeSymbolsType, exchangeName);
+    }
+
+    @Override
+    public MarketDataService getMarketDataService(String exchangeName) throws XChangeServiceException, IOException {
+        return variableDispatch(XChangeDispatcher.MarketDataServiceType, exchangeName);
+        /*
+           for (Map.Entry<Exchange, org.knowm.xchange.Exchange> entry : exchangeMap.entrySet()) {
+           if (entry.getKey().getExchangeClassName().contains(exchangeName)) {
+           return variableDispatch(XChangeDispatcher.MarketDataServiceType, entry.getValue(), exchangeName);
+           }
+           }
+           return null;
+           */
+    }
+
+    @Override
+    public boolean setProperties(String exchangeName) {
+
+        log.debug("requested  " + exchangeName);
+        for (Exchange exchange : Exchange.values()) {
+            if (exchange.getExchangeClassName().contains(exchangeName)) {
+                ExchangeSpecification exchangeSpecification = createExchangeSpecification(exchange);
+                try {
+                    exchangeMap.put(exchangeName, ExchangeFactory.INSTANCE.createExchange(exchangeSpecification));
+                    log.debug("Added exchange " + exchangeName);
+                    return true;
+                } catch (ExchangeException ee) {
+                    log.error("Couldn't create XChange " + exchange, ee);
+                    return false;
+                }
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public boolean setProperties(ExchangeCredentials exchangeCredentials) {
 
         log.debug("\nGiven Parameters for exchange: " + exchangeCredentials.getExchange());
-        log.debug("key: " + exchangeCredentials.getKey());
-        log.debug("secret: " + exchangeCredentials.getSecret());
-        log.debug("passphrase: " + exchangeCredentials.getPassphrase());
-
         for (Exchange exchange : Exchange.values()) {
             if (exchange.getExchangeClassName().contains(exchangeCredentials.getExchange())) {
                 ExchangeSpecification exchangeSpecification = createExchangeSpecification(exchange, exchangeCredentials);
                 try {
-                    exchangeMap.put(exchange, ExchangeFactory.INSTANCE.createExchange(exchangeSpecification));
+                    exchangeCredsMap.put(exchangeCredentials, ExchangeFactory.INSTANCE.createExchange(exchangeSpecification));
                     log.debug("Added exchange " + exchange);
+                    return true;
                 } catch (ExchangeException ee) {
-                    //TODO NEEDS TO BE CAUGHT AND REPORTED TO CONSUMER
                     log.error("Couldn't create XChange " + exchange, ee);
+                    return false;
                 }
             }
         }
-        this.exchangeMap = Collections.unmodifiableMap(exchangeMap);
+        return false;
     }
-
-    @Override
-    public void setProperties(Map<String, String> params) {
-        Map<Exchange, org.knowm.xchange.Exchange> exchangeMap = new LinkedHashMap<>();
-
-        log.debug("\nGiven Parameters for exchange: " + params.get("exchange"));
-        for (Map.Entry<String, String> entry : params.entrySet()) {
-            log.debug("property: " + entry.getKey());
-            log.debug("value: " + entry.getValue());
-        }
-
-        for (Exchange exchange : Exchange.values()) {
-            if (exchange.getExchangeClassName().contains(params.get("exchange"))) {
-                ExchangeSpecification exchangeSpecification = createExchangeSpecification(exchange, params);
-                try {
-                    exchangeMap.put(exchange, ExchangeFactory.INSTANCE.createExchange(exchangeSpecification));
-                    log.debug("Added exchange " + exchange);
-                } catch (ExchangeException ee) {
-                    //TODO NEEDS TO BE CAUGHT AND REPORTED TO CONSUMER
-                    log.error("Couldn't create XChange " + exchange, ee);
-                }
-            }
-        }
-        this.exchangeMap = Collections.unmodifiableMap(exchangeMap);
-    }
-
-    @Override
-    public Set<Exchange> getExchanges() {
-        return exchangeMap.keySet();
-    }
-
-    @Override
-    public AccountService getAccountService(String exchangeName) {
-        for (Map.Entry<Exchange, org.knowm.xchange.Exchange> entry : exchangeMap.entrySet()) {
-            if (entry.getKey().getExchangeClassName().contains(exchangeName)) {
-                return entry.getValue().getAccountService();
-            }
-        }
-        return null;
-    }
-
-    @Override
-    public ExchangeMetaData getExchangeMetaData(String exchangeName) {
-        for (Map.Entry<Exchange, org.knowm.xchange.Exchange> entry : exchangeMap.entrySet()) {
-            if (entry.getKey().getExchangeClassName().contains(exchangeName)) {
-                return entry.getValue().getExchangeMetaData();
-            }
-        }
-        return null;
-    }
-
-    @Override
-    public List<CurrencyPair> getExchangeSymbols(String exchangeName) {
-        for (Map.Entry<Exchange, org.knowm.xchange.Exchange> entry : exchangeMap.entrySet()) {
-            if (entry.getKey().getExchangeClassName().contains(exchangeName)) {
-                return entry.getValue().getExchangeSymbols();
-            }
-        }
-        return null;
-    }
-
-    @Override
-    public MarketDataService getMarketDataService(String exchangeName) {
-        for (Map.Entry<Exchange, org.knowm.xchange.Exchange> entry : exchangeMap.entrySet()) {
-            if (entry.getKey().getExchangeClassName().contains(exchangeName)) {
-                return entry.getValue().getMarketDataService();
-            }
-        }
-        return null;
-    }
-
-    //@Override
-    //public void setEnvironment(Environment environment) {
-    //    this.environment = environment;
-    //}
 
     protected ExchangeSpecification createExchangeSpecification(Exchange exchange) {
         String exchangeClassName = exchange.getExchangeClassName();
         ExchangeSpecification exchangeSpecification = new ExchangeSpecification(exchangeClassName);
 
-        return exchangeSpecification;
-    }
-
-    protected ExchangeSpecification createExchangeSpecification(Exchange exchange, Map<String, String> params) {
-        String exchangeClassName = exchange.getExchangeClassName();
-        ExchangeSpecification exchangeSpecification = new ExchangeSpecification(exchangeClassName);
-
-        //TODO optional API_KEY/SECRET_KEY?
-        //setExchangeProperty(exchange, "USERNAME", exchangeSpecification::setUserName, params.get("username"));
-        //setExchangeProperty(exchange, "PASSWORD", exchangeSpecification::setPassword,  params.get("password"));
-        setExchangeProperty(exchange, "API_KEY", exchangeSpecification::setApiKey, params.get("key"));
-        setExchangeProperty(exchange, "SECRET_KEY", exchangeSpecification::setSecretKey, params.get("secret"));
-        if (params.get("passphrase") != null)
-            exchangeSpecification.setExchangeSpecificParametersItem("passphrase", params.get("passphrase"));
-        else
-            exchangeSpecification.setExchangeSpecificParametersItem("passphrase","");
-
-        //exchangeSpecification.setApiKey(apiKey);
-        //exchangeSpecification.setSecretKey(apiSecret);
-
-        //Map<String, Object> esParams = exchangeSpecification.getExchangeSpecificParameters();
-
-        //for (Map.Entry<String, Object> entry : esParams.entrySet()) {
-        //    log.debug("exchange specific param " + entry.getKey());
-        //    log.debug("exchange specific object " + entry.getValue().toString());
-        //    exchangeSpecification.setExchangeSpecificParametersItem(entry.getKey(), params.get(entry.getKey()));
-        //}
         return exchangeSpecification;
     }
 
@@ -202,18 +208,15 @@ public class XChangeFactoryImpl implements XChangeFactory { // EnvironmentAware,
     }
 
     protected void setExchangeProperty(
-        Exchange exchange, String propertyName, Consumer<String> propertyConsumer, String property) {
+            Exchange exchange, String propertyName, Consumer<String> propertyConsumer, String property) {
         log.debug("props for exchange " + exchange.name());
         String exchangePropertyName = (exchange.name() + "_" + propertyName).toUpperCase();
         log.debug("props " + exchangePropertyName);
 
-        //Optional<String> exchangePropertyValue = Optional.ofNullable(environment.getProperty(exchangePropertyName));
-        //TODO what?
-        //Optional<String> exchangePropertyValue = Optional.ofNullable(property);
         String exchangePropertyValue = property;
         if (exchangePropertyValue != "") {
             log.debug("Setting exchange property {}", property);
             propertyConsumer.accept(exchangePropertyValue);
         }
-    }
+            }
 }

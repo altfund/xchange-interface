@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.List;
 import org.altfund.xchangeinterface.xchange.model.Exchange;
 import org.altfund.xchangeinterface.xchange.service.exceptions.XChangeServiceException;
+import java.io.IOException;
 import org.knowm.xchange.dto.meta.ExchangeMetaData;
 import org.knowm.xchange.service.account.AccountService;
 import org.knowm.xchange.service.marketdata.MarketDataService;
@@ -16,14 +17,10 @@ import org.altfund.xchangeinterface.xchange.model.ExchangeCredentials;
  */
 public interface XChangeFactory {
 
-  Set<Exchange> getExchanges();
-
-  //TODO the throws should it be there?
-  ExchangeMetaData getExchangeMetaData(String exchangeName) throws XChangeServiceException;
-  AccountService getAccountService(String exchangeName) throws XChangeServiceException;
-  List<CurrencyPair> getExchangeSymbols(String exchangeName);
-  MarketDataService getMarketDataService(String exchangeName);
-  void setProperties(String exchangeName);
-  void setProperties(Map<String, String> params);
-  void setProperties(ExchangeCredentials exchangeCredentials);
+  ExchangeMetaData getExchangeMetaData(String exchangeName) throws XChangeServiceException, IOException;
+  AccountService getAccountService(ExchangeCredentials exchangeCredentials) throws XChangeServiceException, IOException;
+  List<CurrencyPair> getExchangeSymbols(String exchangeName) throws XChangeServiceException, IOException;
+  MarketDataService getMarketDataService(String exchangeName) throws XChangeServiceException, IOException;
+  boolean setProperties(String exchangeName);
+  boolean setProperties(ExchangeCredentials exchangeCredentials);
 }
