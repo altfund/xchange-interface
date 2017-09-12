@@ -4,6 +4,7 @@ import org.altfund.xchangeinterface.xchange.service.XChangeFactory;
 import org.altfund.xchangeinterface.xchange.service.XChangeFactoryImpl;
 import org.altfund.xchangeinterface.xchange.service.XChangeService;
 import org.altfund.xchangeinterface.xchange.service.XChangeServiceImpl;
+import org.altfund.xchangeinterface.xchange.service.util.LimitOrderPlacer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.altfund.xchangeinterface.restApi.currency.CurrencyController;
@@ -20,6 +21,11 @@ import org.altfund.xchangeinterface.xchange.service.OrderDecryptor;
 public class XChangeServiceConfig {
 
   @Bean
+  public LimitOrderPlacer limitOrderPlacer() {
+    return new LimitOrderPlacer();
+  }
+
+  @Bean
   public OrderDecryptor orderDecryptor() {
     return new OrderDecryptor();
   }
@@ -30,8 +36,8 @@ public class XChangeServiceConfig {
   }
 
   @Bean
-  public XChangeService xChangeService(XChangeFactory xChangeFactory, JsonHelper jh) {
-    return new XChangeServiceImpl(xChangeFactory, jh);
+  public XChangeService xChangeService(XChangeFactory xChangeFactory, JsonHelper jh, LimitOrderPlacer limitOrderPlacer) {
+    return new XChangeServiceImpl(xChangeFactory, jh, limitOrderPlacer);
   }
 
   @Bean

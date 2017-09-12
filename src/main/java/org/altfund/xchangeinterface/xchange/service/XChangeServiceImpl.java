@@ -1,30 +1,39 @@
 package org.altfund.xchangeinterface.xchange.service;
 
-import java.io.IOException;
-import lombok.extern.slf4j.Slf4j;
-import org.altfund.xchangeinterface.xchange.model.ExchangeCredentials;
-import org.altfund.xchangeinterface.xchange.service.exceptions.XChangeServiceException;
-import org.altfund.xchangeinterface.util.JsonHelper;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.HashMap;
+import java.util.Optional;
+import java.math.BigDecimal;
+
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import org.altfund.xchangeinterface.xchange.model.Exchange;
+import lombok.extern.slf4j.Slf4j;
+
+import org.knowm.xchange.service.trade.TradeService;
 import org.knowm.xchange.dto.meta.ExchangeMetaData;
 import org.knowm.xchange.currency.CurrencyPair;
 import org.knowm.xchange.service.account.AccountService;
 import org.knowm.xchange.dto.account.AccountInfo;
 import org.knowm.xchange.dto.account.Wallet;
 import org.knowm.xchange.service.marketdata.MarketDataService;
+
+import org.altfund.xchangeinterface.xchange.model.Order;
+import org.altfund.xchangeinterface.xchange.model.OrderSpec;
+import org.altfund.xchangeinterface.xchange.model.OrderResponse;
+import org.altfund.xchangeinterface.xchange.model.Exchange;
+import org.altfund.xchangeinterface.xchange.model.ExchangeCredentials;
+import org.altfund.xchangeinterface.util.JsonHelper;
 import org.altfund.xchangeinterface.xchange.service.util.JsonifyCurrencies;
 import org.altfund.xchangeinterface.xchange.service.util.JsonifyExchangeTickers;
 import org.altfund.xchangeinterface.xchange.service.util.JsonifyOrderBooks;
 import org.altfund.xchangeinterface.xchange.service.util.JsonifyTradeFees;
 import org.altfund.xchangeinterface.xchange.service.util.JsonifyBalances;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
-import java.util.HashMap;
-import java.util.Optional;
+import org.altfund.xchangeinterface.xchange.service.util.LimitOrderPlacer;
+
+import java.io.IOException;
 import java.util.NoSuchElementException;
-import java.math.BigDecimal;
+import org.altfund.xchangeinterface.xchange.service.exceptions.XChangeServiceException;
 
 /**
  * altfund
@@ -34,10 +43,12 @@ public class XChangeServiceImpl implements XChangeService {
 
     private final XChangeFactory xChangeFactory;
     private final JsonHelper jh;
+    private final LimitOrderPlacer limitOrderPlacer;
 
-    public XChangeServiceImpl(XChangeFactory xChangeFactory, JsonHelper jh) {
+    public XChangeServiceImpl(XChangeFactory xChangeFactory, JsonHelper jh, LimitOrderPlacer limitOrderPlacer) {
         this.xChangeFactory = xChangeFactory;
         this.jh = jh;
+        this.limitOrderPlacer = limitOrderPlacer;
     }
 
     @Override
@@ -172,7 +183,6 @@ public class XChangeServiceImpl implements XChangeService {
         ObjectNode errorMap = jh.getObjectNode();
 
         try {
-            //xChangeFactory.setProperties(exchangeCredentials);
             accountService = Optional.ofNullable(xChangeFactory.getAccountService(exchangeCredentials));
             if (!accountService.isPresent()){
                 errorMap.put("ERROR", exchangeCredentials.getExchange() + "No such account service");
@@ -210,5 +220,51 @@ public class XChangeServiceImpl implements XChangeService {
         }
         log.debug("balancemap " + balanceMap);
         return balanceMap;
+    }
+
+    @Override
+    public OrderResponse placeLimitOrder(Order order) {
+        OrderSpec orderSpec = null;
+        ExchangeCredentials exchangeCredentials = null;
+        OrderResponse orderResponse = null;
+        ObjectNode errorMap = jh.getObjectNode();
+        TradeService tradeService = null;
+        CurrencyPair currencyPair = null;
+        int scale = 5;
+        exchangeCredentials = order.getExchangeCredentials();
+        String orderType = order.getOrderType();
+
+        if (!"ASK".equals(orderType) || !"BID".equals(orderType)) {
+            //errorMap.put("ERROR", "order type MUST be equal to 'ASK' or 'BID'");
+            //return errorMap;
+            log.error("wrong value");
+            //TODO throw XChangeServiceException;
+        }
+
+        try {
+            tradeService = xChangeFactory.getTradeService(exchangeCredentials);
+            currencyPair = new CurrencyPair(
+                order.getOrderSpec().getBaseCurrency().name(),
+                order.getOrderSpec().getQuoteCurrency().name()
+            );
+
+            scale = xChangeFactory.getExchangeScale(order.getExchangeCredentials(), currencyPair);
+
+            orderResponse = limitOrderPlacer.placeOrder(order, tradeService, currencyPair, scale, jh);
+            if (orderResponse.isRetryable()) {
+                //TODO is using same orderResponse wrong?
+                orderResponse = limitOrderPlacer.placeOrder(order, tradeService, currencyPair, scale, jh);
+            }
+        }
+        catch (IOException e) {
+            log.error("XChangeServiceException {}: " + e, e.getMessage());
+        }
+        catch (XChangeServiceException e) {
+            log.error("XChangeServiceException {}: " + e, e.getMessage());
+        }
+        catch (RuntimeException re) {
+            log.error("Non-retyable error {}: " + re, re.getMessage());
+        }
+        return orderResponse;
     }
 }
