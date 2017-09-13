@@ -5,6 +5,7 @@ import org.altfund.xchangeinterface.xchange.model.ExchangeCredentials;
 import org.altfund.xchangeinterface.xchange.model.Exchange;
 import org.altfund.xchangeinterface.xchange.model.OrderResponse;
 import org.altfund.xchangeinterface.xchange.model.TradeHistory;
+import org.altfund.xchangeinterface.xchange.model.OpenOrder;
 import org.altfund.xchangeinterface.xchange.service.exceptions.XChangeServiceException;
 
 import org.knowm.xchange.currency.Currency;
@@ -26,4 +27,5 @@ public interface XChangeService {
     OrderResponse placeLimitOrder(Order order);
     boolean cancelLimitOrder(Order order);
     String getTradeHistory(TradeHistory tradeHistory);
+    String getOpenOrders(OpenOrder openOrder);
 }

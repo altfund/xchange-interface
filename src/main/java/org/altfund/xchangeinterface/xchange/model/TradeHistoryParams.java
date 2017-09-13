@@ -12,7 +12,7 @@ import java.util.Date;
 public class TradeHistoryParams {
 
     @JsonProperty("currency_pair")
-    private CurrencyPair pair;
+    private CurrencyPair currencyPair;
 
     @JsonProperty("currency_pairs")
     private Collection<CurrencyPair> currencyPairs;

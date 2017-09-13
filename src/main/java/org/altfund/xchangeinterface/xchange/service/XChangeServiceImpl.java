@@ -19,6 +19,9 @@ import org.knowm.xchange.dto.account.AccountInfo;
 import org.knowm.xchange.dto.account.Wallet;
 import org.knowm.xchange.dto.trade.UserTrades;
 import org.knowm.xchange.service.marketdata.MarketDataService;
+import org.knowm.xchange.dto.trade.LimitOrder;
+import org.knowm.xchange.service.trade.params.TradeHistoryParamsAll;
+import org.knowm.xchange.service.trade.params.orders.OpenOrdersParams;
 
 import org.altfund.xchangeinterface.xchange.model.Order;
 import org.altfund.xchangeinterface.xchange.model.OrderSpec;
@@ -27,7 +30,7 @@ import org.altfund.xchangeinterface.xchange.model.Exchange;
 import org.altfund.xchangeinterface.xchange.model.ExchangeCredentials;
 import org.altfund.xchangeinterface.xchange.model.TradeHistory;
 import org.altfund.xchangeinterface.xchange.model.TradeHistoryParams;
-import org.knowm.xchange.service.trade.params.TradeHistoryParamsAll;
+import org.altfund.xchangeinterface.xchange.model.OpenOrder;
 import org.altfund.xchangeinterface.util.JsonHelper;
 import org.altfund.xchangeinterface.xchange.service.util.JsonifyCurrencies;
 import org.altfund.xchangeinterface.xchange.service.util.JsonifyExchangeTickers;
@@ -329,6 +332,50 @@ public class XChangeServiceImpl implements XChangeService {
 
             //userTradesMap = JsonifyUserTrades.toJson(userTrades, exchangeCredentials.getExchange(), jh);
             response = jh.getObjectMapper().writeValueAsString(userTrades);
+
+        }
+        //TODO return errors as json
+        catch (IOException e) {
+            log.error("XChangeServiceException {}: " + e, e.getMessage());
+        }
+        catch (XChangeServiceException e) {
+            log.error("XChangeServiceException {}: " + e, e.getMessage());
+        }
+        catch (RuntimeException re) {
+            log.error("Non-retyable error {}: " + re, re.getMessage());
+        }
+        return response;
+    }
+
+    @Override
+    public String getOpenOrders(OpenOrder openOrder) {
+        ExchangeCredentials exchangeCredentials = null;
+        exchangeCredentials = openOrder.getExchangeCredentials();
+
+        org.knowm.xchange.service.trade.params.orders.OpenOrdersParams knowmOpenOrderParms = null;
+        //knowmOpenOrderParms = openOrder.getOpenOrderParams();
+
+        List<LimitOrder> openOrders = null;
+        ObjectNode errorMap = jh.getObjectNode();
+        //ObjectNode userTradesMap = jh.getObjectNode();
+        TradeService tradeService = null;
+        CurrencyPair currencyPair = null;
+        int scale = 5;
+        UserTrades userTrades = null;
+        String response = "";
+
+        try {
+            tradeService = xChangeFactory.getTradeService(exchangeCredentials);
+            //tradeParams = tradeService.createTradeHistoryParams();
+
+            knowmOpenOrderParms = dozerBeanMapper.map(
+                                        openOrder.getOpenOrderParams(),
+                                        org.knowm.xchange.service.trade.params.orders.OpenOrdersParams.class);
+
+            openOrders = tradeService.getOpenOrders(knowmOpenOrderParms).getOpenOrders();
+
+            //userTradesMap = JsonifyUserTrades.toJson(userTrades, exchangeCredentials.getExchange(), jh);
+            response = jh.getObjectMapper().writeValueAsString(openOrders);
 
         }
         //TODO return errors as json

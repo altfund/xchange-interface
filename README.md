@@ -5,6 +5,26 @@
 
 # Currently supported endpoints
 
+## /openorders *encrypted method*
+     - /openorders?iv=XYZ&encrypted_data=ABC
+     - List<org.knowm.xchange.dto.trade.LimitOrder>, http://knowm.org/javadocs/xchange/org/knowm/xchange/dto/trade/LimitOrder.html 
+     - getsOpenOrders
+        - http://knowm.org/javadocs/xchange/org/knowm/xchange/service/trade/TradeService.html#getOpenOrders-org.knowm.xchange.service.trade.params.orders.OpenOrdersParams-
+     - accepts json in paramter encrypted_data:
+ ```
+     - encrypted_data = {
+        exchange_credentials: {
+                                   exchange: "<exchange>", //String
+                                   key: "<key>", //String
+                                   secret="<secret>", //String
+                                   passphrase="<passphrase>" // String
+                               },
+        open_order_params: {
+                            currency_pair: "<currency_pair>", // CurrencyPair
+                            currency_pairs: ["<currency_pair>", ...  ] // CurrencyPair[]
+                      } 
+       }
+```
 ## /tradehistory *encrypted method*
      - /tradehistory?iv=XYZ&encrypted_data=ABC
      - org.knowm.xchange.dto.trade.UserTrades, http://knowm.org/javadocs/xchange/org/knowm/xchange/dto/trade/UserTrades.html 
