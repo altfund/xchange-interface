@@ -223,7 +223,33 @@ public class XChangeServiceImpl implements XChangeService {
     }
 
     @Override
+    public boolean cancelLimitOrder(Order order) {
+        ExchangeCredentials exchangeCredentials = null;
+        ObjectNode errorMap = jh.getObjectNode();
+        TradeService tradeService = null;
+        exchangeCredentials = order.getExchangeCredentials();
+        boolean orderResponse = false;
+
+        try {
+            tradeService = xChangeFactory.getTradeService(exchangeCredentials);
+
+            orderResponse = tradeService.cancelOrder(order.getOrderId());
+        }
+        catch (IOException e) {
+            log.error("XChangeServiceException {}: " + e, e.getMessage());
+        }
+        catch (XChangeServiceException e) {
+            log.error("XChangeServiceException {}: " + e, e.getMessage());
+        }
+        catch (RuntimeException re) {
+            log.error("Non-retyable error {}: " + re, re.getMessage());
+        }
+        return orderResponse;
+    }
+
+    @Override
     public OrderResponse placeLimitOrder(Order order) {
+
         OrderSpec orderSpec = null;
         ExchangeCredentials exchangeCredentials = null;
         OrderResponse orderResponse = null;

@@ -4,10 +4,56 @@
 ## test with ```curl -s 'http://localhost:9000/ticker?exchange=gdax```
 
 # Currently supported endpoints
-## /balance
- * /balance?exchange=<exchange>&key=<key>&secret=<secret>[&passphrase=<passphrase>]
-    - org.knowm.xchange.dto.account.Balance, http://knowm.org/javadocs/xchange/org/knowm/xchange/dto/account/Balance.html
-    - every balance for each wallet on given <exchange>.
+
+## /cancelorder *encrypted method*
+     - /cancelorder?iv=XYZ&encrypted_data=ABC
+     - org.knowm.xchange.dto.trade.LimitOrder, http://knowm.org/javadocs/xchange/org/knowm/xchange/dto/trade/LimitOrder.html 
+     - cancels limit order
+        - http://knowm.org/javadocs/xchange/org/knowm/xchange/service/trade/TradeService.html#cancelOrder-java.lang.String-
+     - accepts json in paramter encrypted_data:
+ ```
+     - encrypted_data = {
+        exchange_credentials: {
+                                   exchange: "<exchange>", 
+                                   key: "<key>", 
+                                   secret="<secret>", 
+                                   passphrase="<passphrase>"
+                               },
+        order_id: "<order_id>" 
+        }
+```
+## /limitorder *encrypted method*
+     - /limitorder?iv=XYZ&encrypted_data=ABC
+     - places limit order
+        - http://knowm.org/javadocs/xchange/org/knowm/xchange/service/trade/TradeService.html#placeLimitOrder-org.knowm.xchange.dto.trade.LimitOrder-
+     - org.knowm.xchange.dto.trade.LimitOrder, http://knowm.org/javadocs/xchange/org/knowm/xchange/dto/trade/LimitOrder.html 
+     - accepts json in paramter encrypted_data:
+ ```
+     - encrypted_data = {
+        exchange_credentials: {
+                                   exchange: "<exchange>", 
+                                   key: "<key>", 
+                                   secret="<secret>", 
+                                   passphrase="<passphrase>"
+                               },
+        order_type: "['ASK'|'BID']", // accepts strings 'ASK' or 'BID'
+        order_spec: {
+                        base_currency: "<base_currency>",
+                        quote_currency: "<quote_currency>",
+                        volume: "<volume>",
+                        price: "<price>",
+                        test: "<test>" 
+                    }
+        }
+```
+## /balance *encrypted method*
+     - /balance?iv=XYZ&encrypted_data=ABC
+     - org.knowm.xchange.dto.account.Balance, http://knowm.org/javadocs/xchange/org/knowm/xchange/dto/account/Balance.html 
+     - every balance for each wallet on given <exchange>.
+     - accepts json in paramter encrypted_data:
+     ```
+     encrypted_data = {exchange: "<exchange>", key: "<key>", secret="<secret>", passphrase="<passphrase>"}
+     ```
 ##/tradefees
  * /tradefees?exchange=<exchange>
     - org.knowm.xchange.dto.meta.CurrencyPairMetaData, http://knowm.org/javadocs/xchange/org/knowm/xchange/dto/meta/CurrencyPairMetaData.html

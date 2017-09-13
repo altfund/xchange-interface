@@ -21,7 +21,8 @@ public interface XChangeService {
     ObjectNode getTickers(String exchange);
     ObjectNode getOrderBooks(Map<String, String> params);
     ObjectNode getExchangeTradeFees(Map<String, String> params);
-    OrderResponse placeLimitOrder(Order order);
     ObjectNode getExchangeBalances(ExchangeCredentials params);
+    OrderResponse placeLimitOrder(Order order);
+    boolean cancelLimitOrder(Order order);
 
 }

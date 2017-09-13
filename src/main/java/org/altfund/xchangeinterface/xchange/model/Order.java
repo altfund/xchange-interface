@@ -21,6 +21,9 @@ public class Order {
   @JsonProperty("order_specs")
   private OrderSpec orderSpec;
 
+  @JsonProperty("order_id")
+  private String orderId;
+
   @JsonProperty("exchange_credentials")
   private ExchangeCredentials exchangeCredentials;
 

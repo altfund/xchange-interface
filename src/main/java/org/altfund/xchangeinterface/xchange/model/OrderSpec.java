@@ -14,20 +14,17 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class OrderSpec {
 
-  @JsonProperty("buy_base_currency")
+  @JsonProperty("base_currency")
   private Currency baseCurrency;
 
-  @JsonProperty("buy_quote_currency")
+  @JsonProperty("quote_currency")
   private Currency quoteCurrency;
 
-  @JsonProperty("buy_volume")
+  @JsonProperty("volume")
   private BigDecimal volume;
 
-  @JsonProperty("buy_price")
+  @JsonProperty("price")
   private BigDecimal price;
-
-  @JsonProperty("buy_exchange")
-  private Exchange exchange;
 
   @JsonProperty("test")
   private boolean test;
