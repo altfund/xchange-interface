@@ -7,9 +7,7 @@ import lombok.Builder;
 import lombok.Getter;
 
 import static org.altfund.xchangeinterface.xchange.model.OrderStatusTypes.NETWORK_ERROR;
-/**
- * Created by lcsontos on 6/27/17.
- */
+
 @Builder
 @Getter
 @Slf4j

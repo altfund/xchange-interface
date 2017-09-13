@@ -1,7 +1,7 @@
 package org.altfund.xchangeinterface.xchange.model;
 
 import org.altfund.xchangeinterface.xchange.model.ExchangeCredentials;
-import org.altfund.xchangeinterface.xchange.model.OrderSpec;
+import org.altfund.xchangeinterface.xchange.model.TradeHistoryParams;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
@@ -10,22 +10,16 @@ import java.util.UUID;
 
 @Data
 @NoArgsConstructor
-public class Order {
+public class TradeHistory {
 
-  @JsonProperty("order_type")
-  private String orderType;
-
-  @JsonProperty("order_specs")
-  private OrderSpec orderSpec;
-
-  @JsonProperty("order_id")
-  private String orderId;
+  @JsonProperty("trade_params")
+  private TradeHistoryParams tradeHistoryParams;
 
   @JsonProperty("exchange_credentials")
   private ExchangeCredentials exchangeCredentials;
 
-  public Order(OrderSpec orderSpec, ExchangeCredentials exchangeCredentials) {
-    this.orderSpec = orderSpec;
+  public TradeHistory(TradeHistoryParams tradeHistoryParams, ExchangeCredentials exchangeCredentials) {
+    this.tradeHistoryParams = tradeHistoryParams;
     this.exchangeCredentials = exchangeCredentials;
   }
 }

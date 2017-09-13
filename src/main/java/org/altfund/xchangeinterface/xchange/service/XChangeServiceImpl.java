@@ -9,6 +9,7 @@ import java.math.BigDecimal;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.extern.slf4j.Slf4j;
+import org.dozer.DozerBeanMapper;
 
 import org.knowm.xchange.service.trade.TradeService;
 import org.knowm.xchange.dto.meta.ExchangeMetaData;
@@ -16,6 +17,7 @@ import org.knowm.xchange.currency.CurrencyPair;
 import org.knowm.xchange.service.account.AccountService;
 import org.knowm.xchange.dto.account.AccountInfo;
 import org.knowm.xchange.dto.account.Wallet;
+import org.knowm.xchange.dto.trade.UserTrades;
 import org.knowm.xchange.service.marketdata.MarketDataService;
 
 import org.altfund.xchangeinterface.xchange.model.Order;
@@ -23,12 +25,16 @@ import org.altfund.xchangeinterface.xchange.model.OrderSpec;
 import org.altfund.xchangeinterface.xchange.model.OrderResponse;
 import org.altfund.xchangeinterface.xchange.model.Exchange;
 import org.altfund.xchangeinterface.xchange.model.ExchangeCredentials;
+import org.altfund.xchangeinterface.xchange.model.TradeHistory;
+import org.altfund.xchangeinterface.xchange.model.TradeHistoryParams;
+import org.knowm.xchange.service.trade.params.TradeHistoryParamsAll;
 import org.altfund.xchangeinterface.util.JsonHelper;
 import org.altfund.xchangeinterface.xchange.service.util.JsonifyCurrencies;
 import org.altfund.xchangeinterface.xchange.service.util.JsonifyExchangeTickers;
 import org.altfund.xchangeinterface.xchange.service.util.JsonifyOrderBooks;
 import org.altfund.xchangeinterface.xchange.service.util.JsonifyTradeFees;
 import org.altfund.xchangeinterface.xchange.service.util.JsonifyBalances;
+//import org.altfund.xchangeinterface.xchange.service.util.JsonifyUserTrades;
 import org.altfund.xchangeinterface.xchange.service.util.LimitOrderPlacer;
 
 import java.io.IOException;
@@ -44,11 +50,16 @@ public class XChangeServiceImpl implements XChangeService {
     private final XChangeFactory xChangeFactory;
     private final JsonHelper jh;
     private final LimitOrderPlacer limitOrderPlacer;
+    private final DozerBeanMapper dozerBeanMapper;
 
-    public XChangeServiceImpl(XChangeFactory xChangeFactory, JsonHelper jh, LimitOrderPlacer limitOrderPlacer) {
+    public XChangeServiceImpl(XChangeFactory xChangeFactory,
+                              JsonHelper jh,
+                              LimitOrderPlacer limitOrderPlacer,
+                              DozerBeanMapper dozerBeanMapper) {
         this.xChangeFactory = xChangeFactory;
         this.jh = jh;
         this.limitOrderPlacer = limitOrderPlacer;
+        this.dozerBeanMapper = dozerBeanMapper;
     }
 
     @Override
@@ -249,7 +260,6 @@ public class XChangeServiceImpl implements XChangeService {
 
     @Override
     public OrderResponse placeLimitOrder(Order order) {
-
         OrderSpec orderSpec = null;
         ExchangeCredentials exchangeCredentials = null;
         OrderResponse orderResponse = null;
@@ -292,5 +302,45 @@ public class XChangeServiceImpl implements XChangeService {
             log.error("Non-retyable error {}: " + re, re.getMessage());
         }
         return orderResponse;
+    }
+
+    @Override
+    public String getTradeHistory(TradeHistory tradeHistory) {
+        ExchangeCredentials exchangeCredentials = null;
+        ObjectNode errorMap = jh.getObjectNode();
+        //ObjectNode userTradesMap = jh.getObjectNode();
+        TradeService tradeService = null;
+        CurrencyPair currencyPair = null;
+        TradeHistoryParams tradeHistoryParams = null;
+        int scale = 5;
+        exchangeCredentials = tradeHistory.getExchangeCredentials();
+        tradeHistoryParams = tradeHistory.getTradeHistoryParams();
+        TradeHistoryParamsAll tradeParams = null;
+        UserTrades userTrades = null;
+        String response = "";
+
+        try {
+            tradeService = xChangeFactory.getTradeService(exchangeCredentials);
+            //tradeParams = tradeService.createTradeHistoryParams();
+
+            tradeParams = dozerBeanMapper.map(tradeHistoryParams, TradeHistoryParamsAll.class);
+
+            userTrades = tradeService.getTradeHistory(tradeParams);
+
+            //userTradesMap = JsonifyUserTrades.toJson(userTrades, exchangeCredentials.getExchange(), jh);
+            response = jh.getObjectMapper().writeValueAsString(userTrades);
+
+        }
+        //TODO return errors as json
+        catch (IOException e) {
+            log.error("XChangeServiceException {}: " + e, e.getMessage());
+        }
+        catch (XChangeServiceException e) {
+            log.error("XChangeServiceException {}: " + e, e.getMessage());
+        }
+        catch (RuntimeException re) {
+            log.error("Non-retyable error {}: " + re, re.getMessage());
+        }
+        return response;
     }
 }

@@ -5,6 +5,33 @@
 
 # Currently supported endpoints
 
+## /tradehistory *encrypted method*
+     - /tradehistory?iv=XYZ&encrypted_data=ABC
+     - org.knowm.xchange.dto.trade.UserTrades, http://knowm.org/javadocs/xchange/org/knowm/xchange/dto/trade/UserTrades.html 
+     - getsTradeHistory
+        - http://knowm.org/javadocs/xchange/org/knowm/xchange/service/trade/TradeService.html#getTradeHistory-org.knowm.xchange.service.trade.params.TradeHistoryParams-
+     - accepts json in paramter encrypted_data:
+ ```
+     - encrypted_data = {
+        exchange_credentials: {
+                                   exchange: "<exchange>", //String
+                                   key: "<key>", //String
+                                   secret="<secret>", //String
+                                   passphrase="<passphrase>" // String
+                               },
+        trade_params: {
+                            currency_pair: "<currency_pair>",  //CurrencyPair
+                            currency_pairs: "<currency_pairs>", //Collection<CurrencyPair>
+                            end_id: "<end_id>", // String
+                            end_time: "<end_time>", // Date
+                            offset: "<offset>", // Long
+                            page_length: "<page_length>",  // Integer
+                            page_number: "<page_number>", //Integer
+                            start_id: "<start_id>", // String
+                            start_time: "<start_time>" // startTime
+                      } 
+       }
+```
 ## /cancelorder *encrypted method*
      - /cancelorder?iv=XYZ&encrypted_data=ABC
      - org.knowm.xchange.dto.trade.LimitOrder, http://knowm.org/javadocs/xchange/org/knowm/xchange/dto/trade/LimitOrder.html 
@@ -14,10 +41,10 @@
  ```
      - encrypted_data = {
         exchange_credentials: {
-                                   exchange: "<exchange>", 
-                                   key: "<key>", 
-                                   secret="<secret>", 
-                                   passphrase="<passphrase>"
+                                   exchange: "<exchange>", //String
+                                   key: "<key>", //String
+                                   secret="<secret>", //String
+                                   passphrase="<passphrase>" // String
                                },
         order_id: "<order_id>" 
         }
@@ -31,18 +58,18 @@
  ```
      - encrypted_data = {
         exchange_credentials: {
-                                   exchange: "<exchange>", 
-                                   key: "<key>", 
-                                   secret="<secret>", 
-                                   passphrase="<passphrase>"
+                                   exchange: "<exchange>", //String
+                                   key: "<key>", //String
+                                   secret="<secret>", //String
+                                   passphrase="<passphrase>" // String
                                },
         order_type: "['ASK'|'BID']", // accepts strings 'ASK' or 'BID'
         order_spec: {
-                        base_currency: "<base_currency>",
-                        quote_currency: "<quote_currency>",
-                        volume: "<volume>",
-                        price: "<price>",
-                        test: "<test>" 
+                        base_currency: "<base_currency>", // Currency
+                        quote_currency: "<quote_currency>", // Currency
+                        volume: "<volume>", //BigDecimal
+                        price: "<price>",// BigDecimal
+                        test: "<test>" //boolean
                     }
         }
 ```
