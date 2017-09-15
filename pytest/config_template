@@ -1,0 +1,20 @@
+[GDAX]
+key=XXXXX
+secret=XXXXX
+passphrase=XXXXX
+
+[KRAKEN]
+key=XXXXX
+secret=XXXXX
+passphrase=None
+
+[POLONIEX]
+key=XXXXX
+secret=XXXXX
+passphrase=None
+
+... etc.
+
+[settings]
+xi_url=http://localhost:9000
+aes_key=<SAME KEY AS PROVIDED TO xchange-interface>

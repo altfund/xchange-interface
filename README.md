@@ -1,7 +1,7 @@
 # API to talk to knowm exchanges
-
-## run with ```mvn spring-boot:run```
-## test with ```curl -s 'http://localhost:9000/ticker?exchange=gdax```
+    - run with ```mvn spring-boot:run```
+    - experiment with provided tasks.py program
+    - must create config file named 'config' in same dir as tasks.py, use config_template
 
 # Currently supported endpoints
 
