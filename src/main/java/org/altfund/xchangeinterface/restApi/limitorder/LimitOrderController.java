@@ -21,7 +21,9 @@ import org.altfund.xchangeinterface.xchange.service.XChangeService;
 
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
+import java.util.NoSuchElementException;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import org.altfund.xchangeinterface.xchange.service.exceptions.XChangeServiceException;
 import javax.crypto.NoSuchPaddingException;
 import java.security.InvalidKeyException;
 import javax.crypto.IllegalBlockSizeException;
@@ -83,6 +85,15 @@ public class LimitOrderController {
         }
         catch (BadPaddingException ex) {
             response = "{ERROR: Invalid Key Exception (error with decryption) "+ ex.getMessage() + "}";
+        }
+        catch (XChangeServiceException ex) {
+            response = "{ERROR: XChangeServiceException " + ex.getMessage() + "}";
+        }
+        catch (NoSuchElementException ex) {
+            response = "{ERROR: NoSuchElementException " + ex.getMessage() + "}";
+        }
+        catch (Exception ex) {
+            response = "{ERROR: exception " + ex.getMessage() + "}";
         }
         //catch (JsonProcessingException ex) {
         //    response = "{ERROR: JsonProcessingException "+ ex.getMessage() + "}";

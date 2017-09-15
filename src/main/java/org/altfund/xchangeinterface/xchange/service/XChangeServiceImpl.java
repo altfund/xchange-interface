@@ -246,7 +246,6 @@ public class XChangeServiceImpl implements XChangeService {
 
         try {
             tradeService = xChangeFactory.getTradeService(exchangeCredentials);
-
             orderResponse = tradeService.cancelOrder(order.getOrderId());
         }
         catch (IOException e) {
@@ -262,7 +261,7 @@ public class XChangeServiceImpl implements XChangeService {
     }
 
     @Override
-    public OrderResponse placeLimitOrder(Order order) {
+    public OrderResponse placeLimitOrder(Order order) throws Exception{
         OrderSpec orderSpec = null;
         ExchangeCredentials exchangeCredentials = null;
         OrderResponse orderResponse = null;
@@ -273,10 +272,10 @@ public class XChangeServiceImpl implements XChangeService {
         exchangeCredentials = order.getExchangeCredentials();
         String orderType = order.getOrderType();
 
-        if (!"ASK".equals(orderType) || !"BID".equals(orderType)) {
+        if (!"ASK".equals(orderType.toUpperCase()) || !"BID".equals(orderType.toUpperCase())) {
             //errorMap.put("ERROR", "order type MUST be equal to 'ASK' or 'BID'");
             //return errorMap;
-            log.error("wrong value");
+            log.error("wrong value, must be ASK or BID");
             //TODO throw XChangeServiceException;
         }
 
@@ -287,7 +286,7 @@ public class XChangeServiceImpl implements XChangeService {
                 order.getOrderSpec().getQuoteCurrency().name()
             );
 
-            scale = xChangeFactory.getExchangeScale(order.getExchangeCredentials(), currencyPair);
+            //scale = xChangeFactory.getExchangeScale(order.getExchangeCredentials(), currencyPair);
 
             orderResponse = limitOrderPlacer.placeOrder(order, tradeService, currencyPair, scale, jh);
             if (orderResponse.isRetryable()) {
@@ -295,14 +294,22 @@ public class XChangeServiceImpl implements XChangeService {
                 orderResponse = limitOrderPlacer.placeOrder(order, tradeService, currencyPair, scale, jh);
             }
         }
+        /*
         catch (IOException e) {
             log.error("XChangeServiceException {}: " + e, e.getMessage());
         }
         catch (XChangeServiceException e) {
             log.error("XChangeServiceException {}: " + e, e.getMessage());
         }
+        catch (NoSuchElementException e) {
+            log.error("NoSuchElementException {}: " + e, e.getMessage());
+        }
         catch (RuntimeException re) {
             log.error("Non-retyable error {}: " + re, re.getMessage());
+        }
+        */
+        catch (Exception e){
+            throw e;
         }
         return orderResponse;
     }

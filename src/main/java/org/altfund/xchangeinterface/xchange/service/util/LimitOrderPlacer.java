@@ -119,6 +119,7 @@ public class LimitOrderPlacer {
             Consumer<String> orderIdConsumer, Consumer<OrderStatus> orderStatusConsumer,
             Consumer<LocalDateTime> orderTimestampConsumer) {
 
+        log.debug("placing otder");
         OrderStatus orderStatus;
         try {
             String limitOrderId = tradeService.placeLimitOrder(limitOrder);

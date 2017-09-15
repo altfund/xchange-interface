@@ -14,6 +14,8 @@ from invoke import task
 #balance, cancelorder, limitorder, openorders, orderbook, json, ticker, tradefees, tradehistory,
 
 exchanges = ['GDAX', 'KRAKEN', 'POLONIEX', 'BITFINEX']
+default_limit_ask = {"order_type":"ASK","order_specs":{"base_currency":"ETH","quote_currency":"BTC","volume":"0.1","price":"10000","test":True}}
+default_limit_bid = {"order_type":"BID","order_specs":{"base_currency":"ETH","quote_currency":"BTC","volume":"1000000","price":"0.0001","test": True}}
 
 def print_exchange_results(response, failure):
     failures = []
@@ -50,7 +52,7 @@ def print_report(response):
         print("==============================================================")
 
 def report(data, exchange, response):
-    if ('ERROR' in data or 'exception' in data or 'error' in data):
+    if (data == None or 'ERROR' in data or 'exception' in data or 'error' in data):
         response.update({"error": True})
         response.update({exchange.upper(): data})
         response.update({exchange.upper() + "ret": False})
@@ -59,12 +61,9 @@ def report(data, exchange, response):
         response.update({exchange.upper() + "ret": True})
 
 def send(data, method, config):
-    #r = json.loads(requests.get("http://localhost:9000/balance", params=json.dumps(data)).text)
-    r = json.loads(requests.get(config.get('xi_url') + "/" + method, params=data).text)
-    #print (r)
-    #if r.get('ERROR', ''):
-    #    print('error')
-    return r
+    r = requests.get(config.get('xi_url') + "/" + method, params=data).text
+    json_data = json.loads(json.dumps(r))
+    return json_data
 
 def encrypt(data, config):
     #https://stackoverflow.com/questions/2257441/random-string-generation-with-upper-case-letters-and-digits-in-python
@@ -107,9 +106,6 @@ def getCreds(exchange):
     except:
         return creds
 
-
-
-
 def getConfig():
     config = configparser.ConfigParser()
     config.read('config')
@@ -135,6 +131,36 @@ def request(exchange, method):
 
     print_report(response)
 
+def requestLimitOrder(exchange, ordertype):
+    order = ""
+    limitorder = ""
+    if ordertype.lower() == 'ask':
+        order = 'ask'
+        limitorder = default_limit_ask
+    elif ordertype.lower() == 'bid':
+        order = 'bid'
+        limitorder = default_limit_bid
+    else:
+        order = ""
+
+    if order == "":
+        print("Must set order type to ASK or BID");
+    else:
+        config = getConfig()
+        response = {}
+        if exchange.lower() == 'all':
+            for exchange in exchanges:
+                creds = getCreds(exchange)
+                limitorder.update({"exchange_credentials":creds})
+                r = send(encrypt(limitorder, config), "limitorder", config)
+                report(r, exchange.lower(), response)
+        else:
+            creds = getCreds(exchange)
+            limitorder.update({"exchange_credentials":creds})
+            r = send(encrypt(limitorder, config), "limitorder", config)
+            report(r, exchange.lower(), response)
+        print_report(response)
+
 def requestBalance(exchange):
     config = getConfig()
     response = {}
@@ -147,7 +173,6 @@ def requestBalance(exchange):
         creds = getCreds(exchange)
         r = send(encrypt(creds, config), "balance", config)
         report(r, exchange.lower(), response)
-
     print_report(response)
 
 @task(help={'exchange': "give -e name of EXCHANGE or ALL for all exchanges"})
@@ -181,9 +206,9 @@ def jsonendpoint(name, exchange):
     request(exchange, 'json')
 
 @task
-def limitorder(name, exchange):
-    #requestBalance(exchange)
-    print("Not yet implemented")
+def limitorder(name, exchange, ordertype):
+    #print("Not yet implemented")
+    requestLimitOrder(exchange, ordertype)
 
 @task
 def currency(name, exchange):
