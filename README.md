@@ -59,7 +59,7 @@
         - http://knowm.org/javadocs/xchange/org/knowm/xchange/service/trade/TradeService.html#cancelOrder-java.lang.String-
      - accepts json in paramter encrypted_data:
  ```
-     - encrypted_data = {
+      encrypted_data = {
         exchange_credentials: {
                                    exchange: "<exchange>", //String
                                    key: "<key>", //String
@@ -69,6 +69,7 @@
         order_id: "<order_id>" 
         }
 ```
+
 ## /limitorder *encrypted method*
      - /limitorder?iv=XYZ&encrypted_data=ABC
      - places limit order
@@ -76,7 +77,7 @@
      - org.knowm.xchange.dto.trade.LimitOrder, http://knowm.org/javadocs/xchange/org/knowm/xchange/dto/trade/LimitOrder.html 
      - accepts json in paramter encrypted_data:
  ```
-     - encrypted_data = {
+      encrypted_data = {
         exchange_credentials: {
                                    exchange: "<exchange>", //String
                                    key: "<key>", //String
@@ -93,6 +94,7 @@
                     }
         }
 ```
+
 ## /balance *encrypted method*
      - /balance?iv=XYZ&encrypted_data=ABC
      - org.knowm.xchange.dto.account.Balance, http://knowm.org/javadocs/xchange/org/knowm/xchange/dto/account/Balance.html 
@@ -101,20 +103,24 @@
      ```
      encrypted_data = {exchange: "<exchange>", key: "<key>", secret="<secret>", passphrase="<passphrase>"}
      ```
-##/tradefees
- * /tradefees?exchange=<exchange>
+
+## /tradefees
+     - /tradefees?exchange=<exchange>
     - org.knowm.xchange.dto.meta.CurrencyPairMetaData, http://knowm.org/javadocs/xchange/org/knowm/xchange/dto/meta/CurrencyPairMetaData.html
     - currency pair metadata for each currency pair on given <exchange>.
-##/currency
- * /currency?exchange=<exchange>
+
+## /currency
+    - /currency?exchange=<exchange>
     - org.knowm.xchange.currency.Currency, http://knowm.org/javadocs/xchange/org/knowm/xchange/currency/Currency.html
     - currencies on given <exchange>.
-##/orderbook
- * /orderbook?exchange=<exchange>&base_currency=<currency>&quote_currency=<currency>
+
+## /orderbook
+     - /orderbook?exchange=<exchange>&base_currency=<currency>&quote_currency=<currency>
     - org.knowm.xchange.dto.marketdata.OrderBook, http://knowm.org/javadocs/xchange/org/knowm/xchange/dto/marketdata/OrderBook.html
     - the order book (asks and bids) for the given base_currency and quote_currency on the given <exchange>.
-##ticker
- * /ticker?exchange=<exchange>
+
+## /ticker
+     - /ticker?exchange=<exchange>
     - org.knowm.xchange.dto.marketdata.Ticker, http://knowm.org/javadocs/xchange/org/knowm/xchange/dto/marketdata/Ticker.html
     - ticker for each currency pair on given <exchange>.
 
