@@ -18,3 +18,4 @@ README.html
 Session.vim
 .env
 test/**
+pytest/config
