@@ -14,19 +14,49 @@ from invoke import task
 #balance, cancelorder, limitorder, openorders, orderbook, json, ticker, tradefees, tradehistory,
 
 exchanges = ['GDAX', 'KRAKEN', 'POLONIEX', 'BITFINEX']
+
+def print_exchange_results(response, failure):
+    failures = []
+    for exchange in exchanges:
+        if exchange.upper() + "ret" in response:
+            print("+++++++++++++++++++++++++++++")
+            print(exchange.upper())
+            print("~~~~~~~~~~~~~~~~")
+            print(response.get(exchange.upper()))
+            if response.get(exchange.upper() + "ret"):
+                print("SUCCESS")
+            else:
+                failures.append(exchange.upper())
+                print("FAILURE")
+            print("+++++++++++++++++++++++++++++")
+    print(response)
+    return failures
+
+
 def print_report(response):
+    print("==============================================================")
+    print("START")
+    print("==============================================================")
     if ('error' in response):
-        print(response)
-        print("there were failures")
+        failures = print_exchange_results(response, True)
+        print("==============================================================")
+        print("FAILURE(S): ", len(failures)/len(exchanges)*100,"%, :: ", len(failures),"/", len(exchanges))
+        print(failures)
+        print("==============================================================")
     else:
-        print(response)
-        print("no failures")
+        print_exchange_results(response, False)
+        print("==============================================================")
+        print("SUCCESS")
+        print("==============================================================")
 
 def report(data, exchange, response):
     if ('ERROR' in data or 'exception' in data or 'error' in data):
         response.update({"error": True})
-        response.update({exchange.lower(): data})
-    response.update({exchange.lower(): data})
+        response.update({exchange.upper(): data})
+        response.update({exchange.upper() + "ret": False})
+    else:
+        response.update({exchange.upper(): data})
+        response.update({exchange.upper() + "ret": True})
 
 def send(data, method, config):
     #r = json.loads(requests.get("http://localhost:9000/balance", params=json.dumps(data)).text)
@@ -61,18 +91,24 @@ def getCreds(exchange):
     exchange = exchange.upper()
     config = configparser.ConfigParser()
     config.read('config')
-    creds = {
-            "exchange": exchange.lower(),
-            "key": config[exchange]['key'],
-            "secret": config[exchange]['secret']
-            }
+    try:
+        creds = {
+                "exchange": exchange.lower(),
+                "key": config[exchange]['key'],
+                "secret": config[exchange]['secret']
+                }
+    except:
+        raise ValueError('exchange ' + exchange.lower() + ' does not have credentials')
 
-    passphrase = config[exchange]['passphrase']
-
-    if (passphrase != None):
+    try:
+        passphrase = config[exchange]['passphrase']
         creds.update({"passphrase":  passphrase})
+        return creds
+    except:
+        return creds
 
-    return creds
+
+
 
 def getConfig():
     config = configparser.ConfigParser()
@@ -163,3 +199,8 @@ def errorendpoint(name, exchange):
     #requestBalance(exchange)
     #print("Not yet implemented")
     request(exchange, 'error')
+
+@task
+def ls(name):
+    for x in exchanges:
+        print(x)
