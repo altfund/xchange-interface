@@ -48,7 +48,8 @@ public class LimitOrderPlacer {
         OrderResponse orderResponse = null;
         OrderResponse.OrderResponseBuilder orderResponseBuilder = OrderResponse
         .builder()
-        .order(order);
+        .orderType(order.getOrderType())
+        .orderSpec(order.getOrderSpec());
 
         if ("ASK".equals(order.getOrderType())) {
             lo = new LimitOrder.Builder(ASK, currencyPair)
@@ -77,16 +78,16 @@ public class LimitOrderPlacer {
                 verifyOrder(
                     tradeService,
                     lo,
-                    orderResponseBuilder::sellOrderStatus,
-                    orderResponseBuilder::sellTimestamp
+                    orderResponseBuilder::orderStatus,
+                    orderResponseBuilder::timestamp
                     );
             }
             else {
                 verifyOrder(
                     tradeService,
                     lo,
-                    orderResponseBuilder::buyOrderStatus,
-                    orderResponseBuilder::buyTimestamp
+                    orderResponseBuilder::orderStatus,
+                    orderResponseBuilder::timestamp
                     );
             }
         }
@@ -96,20 +97,26 @@ public class LimitOrderPlacer {
                 sellOrderStatus = placeOrder(
                     tradeService,
                     lo,
-                    orderResponseBuilder::sellOrderId,
-                    orderResponseBuilder::sellOrderStatus,
-                    orderResponseBuilder::sellTimestamp
+                    orderResponseBuilder::orderId,
+                    orderResponseBuilder::orderStatus,
+                    orderResponseBuilder::timestamp
                     );
             }
             else {
                 buyOrderStatus = placeOrder(
                     tradeService,
                     lo,
-                    orderResponseBuilder::buyOrderId,
-                    orderResponseBuilder::buyOrderStatus,
-                    orderResponseBuilder::buyTimestamp
+                    orderResponseBuilder::orderId,
+                    orderResponseBuilder::orderStatus,
+                    orderResponseBuilder::timestamp
                     );
             }
+        }
+        try {
+        log.debug("built order response {}", jh.getObjectMapper().writeValueAsString(orderResponseBuilder.build()));
+        }
+        catch(Exception ex) {
+            log.error("json processing error {}", ex.getMessage());
         }
         return orderResponseBuilder.build();
     }
@@ -148,13 +155,15 @@ public class LimitOrderPlacer {
 
         OrderStatus orderStatus;
         try {
+            log.debug("Verify Order");
             tradeService.verifyOrder(limitOrder);
             orderStatus = new OrderStatus(PLACED, "");
             //log.debug("order placed {}.", orderStatus.getOrderStatusKind());
         } catch (Exception e) {
-            log.error("failed to verify order in test:\n type: {}, \nreason: {}. \n.",
+            log.error("failed to place order in test:\n type: {}, \nreason: {}. \n, \ntrace: {}.",
                     e.getClass().getCanonicalName(),
-                    e.getMessage());
+                    e.getMessage(),
+                    e.getStackTrace());
             orderStatus = translateException(e);
         }
 

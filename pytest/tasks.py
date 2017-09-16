@@ -161,6 +161,25 @@ def requestLimitOrder(exchange, ordertype):
             report(r, exchange.lower(), response)
         print_report(response)
 
+def cancelLimitOrder(exchange, order_id):
+    config = getConfig()
+    response = {}
+    order_to_cancel = {}
+    if exchange.lower() == 'all':
+        for exchange in exchanges:
+            creds = getCreds(exchange)
+            order_to_cancel.update({"exchange_credentials": creds});
+            order_to_cancel.update({"order_id": order_id});
+            r = send(encrypt(order_to_cancel, config), "cancelorder", config)
+            report(r, exchange.lower(), response)
+    else:
+        creds = getCreds(exchange)
+        order_to_cancel.update({"exchange_credentials": creds});
+        order_to_cancel.update({"order_id": order_id});
+        r = send(encrypt(order_to_cancel, config), "cancelorder", config)
+        report(r, exchange.lower(), response)
+    print_report(response)
+
 def requestBalance(exchange):
     config = getConfig()
     response = {}
@@ -215,9 +234,10 @@ def currency(name, exchange):
     request(exchange, 'currency')
 
 @task
-def cancelorder(name, exchange):
+def cancelorder(name, exchange, order_id):
     #requestBalance(exchange)
-    print("Not yet implemented")
+    #print("Not yet implemented")
+    cancelLimitOrder(exchange, order_id)
 
 @task
 def errorendpoint(name, exchange):

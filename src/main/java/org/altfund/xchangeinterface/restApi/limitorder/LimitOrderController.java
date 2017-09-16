@@ -67,6 +67,7 @@ public class LimitOrderController {
             //probs change that to a pojo like in ee.
             OrderResponse orderResponse = xChangeService.placeLimitOrder(order);
             response = jh.getObjectMapper().writeValueAsString(orderResponse);
+            log.debug("The order response\n{}", response);
         }
         catch (IOException ex) {
             response = "{ERROR: IOException "+ ex.getMessage() + "}";

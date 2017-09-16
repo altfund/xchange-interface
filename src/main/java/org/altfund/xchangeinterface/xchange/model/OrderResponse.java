@@ -15,27 +15,30 @@ public class OrderResponse {
 
   private final String orderResponseId = UUID.randomUUID().toString();
 
-  private Order order;
+  private OrderSpec orderSpec;
+  private String orderType;
 
-  private String buyOrderId;
-  private OrderStatus buyOrderStatus;
-  private LocalDateTime buyTimestamp;
+  // private String buyOrderId;
+  //private OrderStatus buyOrderStatus;
+  //private LocalDateTime buyTimestamp;
 
-  private String sellOrderId;
-  private OrderStatus sellOrderStatus;
-  private LocalDateTime sellTimestamp;
+  private String orderId;
+  private OrderStatus orderStatus;
+  private LocalDateTime timestamp;
 
+  /*
   public boolean isRetryable() {
      // log.debug("buy order status error + ", buyOrderStatus.getOrderStatusKind());
       //log.debug("sell order status error + ", sellOrderStatus.getOrderStatusKind());
-    if (buyOrderStatus.hasStatus(NETWORK_ERROR)) {
+    if (getBuyOrderStatus().hasStatus(NETWORK_ERROR)) {
       return true;
     }
 
-    if (sellOrderStatus.hasStatus(NETWORK_ERROR)) {
+    if (getSellOrderStatus().hasStatus(NETWORK_ERROR)) {
       return true;
     }
 
     return false;
   }
+  */
 }

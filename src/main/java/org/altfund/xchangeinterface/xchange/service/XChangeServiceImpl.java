@@ -289,10 +289,12 @@ public class XChangeServiceImpl implements XChangeService {
             //scale = xChangeFactory.getExchangeScale(order.getExchangeCredentials(), currencyPair);
 
             orderResponse = limitOrderPlacer.placeOrder(order, tradeService, currencyPair, scale, jh);
+            /*
             if (orderResponse.isRetryable()) {
                 //TODO is using same orderResponse wrong?
                 orderResponse = limitOrderPlacer.placeOrder(order, tradeService, currencyPair, scale, jh);
             }
+            */
         }
         /*
         catch (IOException e) {
@@ -311,6 +313,7 @@ public class XChangeServiceImpl implements XChangeService {
         catch (Exception e){
             throw e;
         }
+        log.debug("Order Response returning");
         return orderResponse;
     }
 
