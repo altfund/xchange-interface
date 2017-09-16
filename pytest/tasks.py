@@ -239,39 +239,38 @@ def requestBalance(exchange):
 def balance(name, exchange):
     requestBalance(exchange)
 
-@task
+@task(help={'exchange': "give -e name of EXCHANGE or ALL for all exchanges"})
 def tradehistory(name, exchange):
     requestTradeHistory(exchange)
 
-@task
+@task(help={'exchange': "give -e name of EXCHANGE or ALL for all exchanges"})
 def openorders(name, exchange):
     requestOpenOrders(exchange)
 
-@task
+@task(help={'exchange': "give -e name of EXCHANGE or ALL for all exchanges"})
 def tradefees(name, exchange):
     request(exchange, 'tradefees')
 
-@task
+@task(help={'exchange': "give -e name of EXCHANGE or ALL for all exchanges"})
 def ticker(name, exchange):
     request(exchange, 'ticker')
 
-@task
+@task(help={'exchange': "give -e name of EXCHANGE or ALL for all exchanges"})
 def orderbook(name, exchange):
     request(exchange, 'orderbook')
 
-@task
-def jsonendpoint(name, exchange):
-    request(exchange, 'json')
+def jsonendpoint(name):
+    request(exchanqe, 'json')
 
-@task
+@task(help={'exchange': "give -e name of EXCHANGE or ALL for all exchanges", "ordertype": "give -o ASK or BID"})
 def limitorder(name, exchange, ordertype):
     requestLimitOrder(exchange, ordertype)
 
-@task
+@task(help={'exchange': "give -e name of EXCHANGE or ALL for all exchanges"})
 def currency(name, exchange):
     request(exchange, 'currency')
 
-@task
+@task(help={'exchange': "give -e name of EXCHANGE or ALL for all exchanges", "order_id": "give -o id of order to cancel"})
 def cancelorder(name, exchange, order_id):
     cancelLimitOrder(exchange, order_id)
 
