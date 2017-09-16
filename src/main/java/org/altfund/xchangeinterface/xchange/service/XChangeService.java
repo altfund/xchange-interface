@@ -26,6 +26,6 @@ public interface XChangeService {
     ObjectNode getExchangeBalances(ExchangeCredentials params);
     OrderResponse placeLimitOrder(Order order) throws Exception;
     boolean cancelLimitOrder(Order order);
-    String getTradeHistory(TradeHistory tradeHistory);
+    String getTradeHistory(TradeHistory tradeHistory) throws Exception;
     String getOpenOrders(OpenOrder openOrder);
 }

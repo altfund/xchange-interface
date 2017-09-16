@@ -29,7 +29,6 @@ public class OrderBookController {
     }
 
     @RequestMapping(value = "/orderbook", produces = "application/json")
-    //public ResponseEntity<String> orderbook(@RequestParam(value="exchange") String exchange) {
     public ResponseEntity<String> orderbook(@RequestParam Map<String, String> params) {
         ObjectNode json = xChangeService.getOrderBooks(params);
         String response = "";

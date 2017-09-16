@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.altfund.xchangeinterface.xchange.service.XChangeService;
 import org.knowm.xchange.dto.meta.CurrencyMetaData;
+import org.altfund.xchangeinterface.restApi.util.ResponseHandler;
 import org.knowm.xchange.currency.Currency;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;

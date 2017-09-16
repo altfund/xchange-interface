@@ -17,6 +17,7 @@ import org.altfund.xchangeinterface.xchange.model.EncryptedOrder;
 import org.altfund.xchangeinterface.xchange.model.Order;
 import org.altfund.xchangeinterface.xchange.service.OrderDecryptor;
 import org.altfund.xchangeinterface.xchange.service.XChangeService;
+import org.altfund.xchangeinterface.restApi.util.ResponseHandler;
 
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
@@ -48,8 +49,6 @@ public class CancelOrderController {
     }
 
     @RequestMapping(value = "/cancelorder", produces = "application/json")
-    //public ResponseEntity<String> balance(@RequestParam String params) {
-    //public ResponseEntity<String> balance(@RequestParam(value="params") String params) {
     public ResponseEntity<String> limitorder(@RequestParam Map<String, String> params) {
         String response = "";
         try {
@@ -65,30 +64,9 @@ public class CancelOrderController {
             boolean orderResponse = xChangeService.cancelLimitOrder(order);
             response = jh.getObjectMapper().writeValueAsString(orderResponse);
         }
-        catch (IOException ex) {
-            response = "{ERROR: IOException "+ ex.getMessage() + "}";
+        catch (Exception ex) {
+            return ResponseHandler.send(ex);
         }
-        catch (NoSuchAlgorithmException ex) {
-            response = "{ERROR: NoSuchAlgorithmException (error with decryption) "+ ex.getMessage() + "}";
-        }
-        catch (NoSuchPaddingException ex) {
-            response = "{ERROR: NoSuchPaddingException (error with decryption) "+ ex.getMessage() + "}";
-        }
-        catch (InvalidKeyException ex) {
-            response = "{ERROR: Invalid Key Exception (error with decryption) "+ ex.getMessage() + "}";
-        }
-        catch (IllegalBlockSizeException ex) {
-            response = "{ERROR: Invalid Key Exception (error with decryption) "+ ex.getMessage() + "}";
-        }
-        catch (BadPaddingException ex) {
-            response = "{ERROR: Invalid Key Exception (error with decryption) "+ ex.getMessage() + "}";
-        }
-        //catch (JsonProcessingException ex) {
-        //    response = "{ERROR: JsonProcessingException "+ ex.getMessage() + "}";
-        //}
-        //return new BalanceMap(response.replace("\\", ""));
-        final HttpHeaders httpHeaders= new HttpHeaders();
-        httpHeaders.setContentType(MediaType.APPLICATION_JSON);
-        return new ResponseEntity<String>(response, httpHeaders, HttpStatus.OK);
+        return ResponseHandler.send(response);
     }
 }

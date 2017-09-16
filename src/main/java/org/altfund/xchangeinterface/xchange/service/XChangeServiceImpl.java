@@ -318,10 +318,9 @@ public class XChangeServiceImpl implements XChangeService {
     }
 
     @Override
-    public String getTradeHistory(TradeHistory tradeHistory) {
+    public String getTradeHistory(TradeHistory tradeHistory) throws Exception {
         ExchangeCredentials exchangeCredentials = null;
         ObjectNode errorMap = jh.getObjectNode();
-        //ObjectNode userTradesMap = jh.getObjectNode();
         TradeService tradeService = null;
         CurrencyPair currencyPair = null;
         TradeHistoryParams tradeHistoryParams = null;
@@ -332,27 +331,21 @@ public class XChangeServiceImpl implements XChangeService {
         UserTrades userTrades = null;
         String response = "";
 
+        log.debug("Begin retrieve trade history");
         try {
             tradeService = xChangeFactory.getTradeService(exchangeCredentials);
-            //tradeParams = tradeService.createTradeHistoryParams();
 
+            log.debug("Call to Dozer...");
             tradeParams = dozerBeanMapper.map(tradeHistoryParams, TradeHistoryParamsAll.class);
+            log.debug("Dozer call success.");
 
             userTrades = tradeService.getTradeHistory(tradeParams);
 
-            //userTradesMap = JsonifyUserTrades.toJson(userTrades, exchangeCredentials.getExchange(), jh);
             response = jh.getObjectMapper().writeValueAsString(userTrades);
 
         }
-        //TODO return errors as json
-        catch (IOException e) {
-            log.error("XChangeServiceException {}: " + e, e.getMessage());
-        }
-        catch (XChangeServiceException e) {
-            log.error("XChangeServiceException {}: " + e, e.getMessage());
-        }
-        catch (RuntimeException re) {
-            log.error("Non-retyable error {}: " + re, re.getMessage());
+        catch (Exception e) {
+            throw e;
         }
         return response;
     }

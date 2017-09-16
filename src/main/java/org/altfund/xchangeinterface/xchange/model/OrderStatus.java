@@ -1,5 +1,6 @@
 package org.altfund.xchangeinterface.xchange.model;
 
+import lombok.extern.slf4j.Slf4j;
 import lombok.Getter;
 import java.util.Optional;
 import java.io.StringWriter;
@@ -25,6 +26,7 @@ import org.altfund.xchangeinterface.xchange.model.OrderStatusTypes;
 //}
 
 @Getter
+@Slf4j
 public class OrderStatus {
     public OrderStatusTypes orderStatusType;
     public String orderStatusPhrase;

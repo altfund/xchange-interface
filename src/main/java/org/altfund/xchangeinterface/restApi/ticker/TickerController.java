@@ -37,7 +37,6 @@ public class TickerController {
         } catch (JsonProcessingException ex) {
             response = "{\"ERROR\":\"JsonProcessingException:"+ ex.getMessage() + "\"}";
         }
-        //return new BalanceMap(response.replace("\\", ""));
         final HttpHeaders httpHeaders= new HttpHeaders();
         httpHeaders.setContentType(MediaType.APPLICATION_JSON);
         return new ResponseEntity<String>(response, httpHeaders, HttpStatus.OK);

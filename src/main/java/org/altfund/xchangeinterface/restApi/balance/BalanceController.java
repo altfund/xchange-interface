@@ -24,6 +24,7 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.BadPaddingException;
 
 import lombok.extern.slf4j.Slf4j;
+import org.altfund.xchangeinterface.restApi.util.ResponseHandler;
 
 /*
  * The above example does not specify GET vs. PUT, POST, and so forth, because
@@ -46,8 +47,6 @@ public class BalanceController {
     }
 
     @RequestMapping(value = "/balance", produces = "application/json")
-    //public ResponseEntity<String> balance(@RequestParam String params) {
-    //public ResponseEntity<String> balance(@RequestParam(value="params") String params) {
     public ResponseEntity<String> balance(@RequestParam Map<String, String> params) {
         String response = "";
         try {
@@ -63,30 +62,9 @@ public class BalanceController {
             ObjectNode json = xChangeService.getExchangeBalances(exchangeCredentials);
             response = jh.getObjectMapper().writeValueAsString(json);
         }
-        catch (IOException ex) {
-            response = "{ERROR: IOException "+ ex.getMessage() + "}";
+        catch (Exception ex) {
+            return ResponseHandler.send(ex);
         }
-        catch (NoSuchAlgorithmException ex) {
-            response = "{ERROR: NoSuchAlgorithmException (error with decryption) "+ ex.getMessage() + "}";
-        }
-        catch (NoSuchPaddingException ex) {
-            response = "{ERROR: NoSuchPaddingException (error with decryption) "+ ex.getMessage() + "}";
-        }
-        catch (InvalidKeyException ex) {
-            response = "{ERROR: Invalid Key Exception (error with decryption) "+ ex.getMessage() + "}";
-        }
-        catch (IllegalBlockSizeException ex) {
-            response = "{ERROR: Invalid Key Exception (error with decryption) "+ ex.getMessage() + "}";
-        }
-        catch (BadPaddingException ex) {
-            response = "{ERROR: Invalid Key Exception (error with decryption) "+ ex.getMessage() + "}";
-        }
-        //catch (JsonProcessingException ex) {
-        //    response = "{ERROR: JsonProcessingException "+ ex.getMessage() + "}";
-        //}
-        //return new BalanceMap(response.replace("\\", ""));
-        final HttpHeaders httpHeaders= new HttpHeaders();
-        httpHeaders.setContentType(MediaType.APPLICATION_JSON);
-        return new ResponseEntity<String>(response, httpHeaders, HttpStatus.OK);
+        return ResponseHandler.send(response);
     }
 }

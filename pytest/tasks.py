@@ -1,6 +1,7 @@
 #!/bin/python3
 
 import json
+import re
 import requests
 import random
 import base64
@@ -52,7 +53,7 @@ def print_report(response):
         print("==============================================================")
 
 def report(data, exchange, response):
-    if (data == None or 'ERROR' in data or 'exception' in data or 'error' in data):
+    if (data == None or 'ERROR' in data or 'exception' in data or 'error' in data or re.match(r'.*error.*', data.lower()) or re.match(r'.*redacted.*', data.lower())):
         response.update({"error": True})
         response.update({exchange.upper(): data})
         response.update({exchange.upper() + "ret": False})
@@ -161,6 +162,46 @@ def requestLimitOrder(exchange, ordertype):
             report(r, exchange.lower(), response)
         print_report(response)
 
+def requestOpenOrders(exchange):
+    config = getConfig()
+    response = {}
+    temp = {}
+    orders_req = {}
+    temp.update({"currency_pair": "ETH/BTC"});
+    orders_req.update({"open_order_params": temp});
+    if exchange.lower() == 'all':
+        for exchange in exchanges:
+            creds = getCreds(exchange)
+            orders_req.update({"exchange_credentials": creds});
+            r = send(encrypt(orders_req, config), "openorders", config)
+            report(r, exchange.lower(), response)
+    else:
+        creds = getCreds(exchange)
+        orders_req.update({"exchange_credentials": creds});
+        r = send(encrypt(orders_req, config), "openorders", config)
+        report(r, exchange.lower(), response)
+    print_report(response)
+
+def requestTradeHistory(exchange):
+    config = getConfig()
+    response = {}
+    temp = {}
+    history_req = {}
+    temp.update({"currency_pair": "BTC/ETH"});
+    history_req.update({"trade_params": temp});
+    if exchange.lower() == 'all':
+        for exchange in exchanges:
+            creds = getCreds(exchange)
+            history_req.update({"exchange_credentials": creds});
+            r = send(encrypt(history_req, config), "tradehistory", config)
+            report(r, exchange.lower(), response)
+    else:
+        creds = getCreds(exchange)
+        history_req.update({"exchange_credentials": creds});
+        r = send(encrypt(history_req, config), "tradehistory", config)
+        report(r, exchange.lower(), response)
+    print_report(response)
+
 def cancelLimitOrder(exchange, order_id):
     config = getConfig()
     response = {}
@@ -200,8 +241,11 @@ def balance(name, exchange):
 
 @task
 def tradehistory(name, exchange):
-    #requestBalance(exchange)
-    print("Not yet implemented")
+    requestTradeHistory(exchange)
+
+@task
+def openorders(name, exchange):
+    requestOpenOrders(exchange)
 
 @task
 def tradefees(name, exchange):
@@ -216,17 +260,11 @@ def orderbook(name, exchange):
     request(exchange, 'orderbook')
 
 @task
-def openorders(name, exchange):
-    #requestBalance(exchange)
-    print("Not yet implemented")
-
-@task
 def jsonendpoint(name, exchange):
     request(exchange, 'json')
 
 @task
 def limitorder(name, exchange, ordertype):
-    #print("Not yet implemented")
     requestLimitOrder(exchange, ordertype)
 
 @task
@@ -235,14 +273,10 @@ def currency(name, exchange):
 
 @task
 def cancelorder(name, exchange, order_id):
-    #requestBalance(exchange)
-    #print("Not yet implemented")
     cancelLimitOrder(exchange, order_id)
 
 @task
 def errorendpoint(name, exchange):
-    #requestBalance(exchange)
-    #print("Not yet implemented")
     request(exchange, 'error')
 
 @task

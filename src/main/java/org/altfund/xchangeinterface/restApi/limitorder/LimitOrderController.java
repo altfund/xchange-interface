@@ -29,6 +29,7 @@ import java.security.InvalidKeyException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.BadPaddingException;
 
+import org.altfund.xchangeinterface.restApi.util.ResponseHandler;
 
 /*
  * The above example does not specify GET vs. PUT, POST, and so forth, because
@@ -51,8 +52,6 @@ public class LimitOrderController {
     }
 
     @RequestMapping(value = "/limitorder", produces = "application/json")
-    //public ResponseEntity<String> balance(@RequestParam String params) {
-    //public ResponseEntity<String> balance(@RequestParam(value="params") String params) {
     public ResponseEntity<String> limitorder(@RequestParam Map<String, String> params) {
         String response = "";
         try {
@@ -63,45 +62,13 @@ public class LimitOrderController {
             log.debug("rec data {}.", encryptedOrder.getEncryptedData());
             order = jh.getObjectMapper().readValue( orderDecryptor.decrypt(encryptedOrder),
                                                                   Order.class);
-            //encrypted order needs to decrypt to a Map<String, String> :(
-            //probs change that to a pojo like in ee.
             OrderResponse orderResponse = xChangeService.placeLimitOrder(order);
             response = jh.getObjectMapper().writeValueAsString(orderResponse);
             log.debug("The order response\n{}", response);
         }
-        catch (IOException ex) {
-            response = "{ERROR: IOException "+ ex.getMessage() + "}";
-        }
-        catch (NoSuchAlgorithmException ex) {
-            response = "{ERROR: NoSuchAlgorithmException (error with decryption) "+ ex.getMessage() + "}";
-        }
-        catch (NoSuchPaddingException ex) {
-            response = "{ERROR: NoSuchPaddingException (error with decryption) "+ ex.getMessage() + "}";
-        }
-        catch (InvalidKeyException ex) {
-            response = "{ERROR: Invalid Key Exception (error with decryption) "+ ex.getMessage() + "}";
-        }
-        catch (IllegalBlockSizeException ex) {
-            response = "{ERROR: Invalid Key Exception (error with decryption) "+ ex.getMessage() + "}";
-        }
-        catch (BadPaddingException ex) {
-            response = "{ERROR: Invalid Key Exception (error with decryption) "+ ex.getMessage() + "}";
-        }
-        catch (XChangeServiceException ex) {
-            response = "{ERROR: XChangeServiceException " + ex.getMessage() + "}";
-        }
-        catch (NoSuchElementException ex) {
-            response = "{ERROR: NoSuchElementException " + ex.getMessage() + "}";
-        }
         catch (Exception ex) {
-            response = "{ERROR: exception " + ex.getMessage() + "}";
+            return ResponseHandler.send(ex);
         }
-        //catch (JsonProcessingException ex) {
-        //    response = "{ERROR: JsonProcessingException "+ ex.getMessage() + "}";
-        //}
-        //return new BalanceMap(response.replace("\\", ""));
-        final HttpHeaders httpHeaders= new HttpHeaders();
-        httpHeaders.setContentType(MediaType.APPLICATION_JSON);
-        return new ResponseEntity<String>(response, httpHeaders, HttpStatus.OK);
+        return ResponseHandler.send(response);
     }
 }

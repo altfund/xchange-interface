@@ -19,6 +19,7 @@ import org.altfund.xchangeinterface.xchange.model.OrderResponse;
 import org.altfund.xchangeinterface.xchange.model.TradeHistory;
 import org.altfund.xchangeinterface.xchange.service.OrderDecryptor;
 import org.altfund.xchangeinterface.xchange.service.XChangeService;
+import org.altfund.xchangeinterface.restApi.util.ResponseHandler;
 
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
@@ -51,8 +52,6 @@ public class TradeHistoryController {
     }
 
     @RequestMapping(value = "/tradehistory", produces = "application/json")
-    //public ResponseEntity<String> balance(@RequestParam String params) {
-    //public ResponseEntity<String> balance(@RequestParam(value="params") String params) {
     public ResponseEntity<String> tradeHistory(@RequestParam Map<String, String> params) {
         String response = "";
         try {
@@ -63,36 +62,11 @@ public class TradeHistoryController {
             log.debug("rec data {}.", encryptedOrder.getEncryptedData());
             tradeHistory = jh.getObjectMapper().readValue( orderDecryptor.decrypt(encryptedOrder),
                                                                   TradeHistory.class);
-            //encrypted order needs to decrypt to a Map<String, String> :(
-            //probs change that to a pojo like in ee.
-            //ObjectNode json = xChangeService.getTradeHistory(tradeHistory);
             response = xChangeService.getTradeHistory(tradeHistory);
-            //response = jh.getObjectMapper().writeValueAsString(json);
         }
-        catch (IOException ex) {
-            response = "{ERROR: IOException "+ ex.getMessage() + "}";
+        catch (Exception ex) {
+            return ResponseHandler.send(ex);
         }
-        catch (NoSuchAlgorithmException ex) {
-            response = "{ERROR: NoSuchAlgorithmException (error with decryption) "+ ex.getMessage() + "}";
-        }
-        catch (NoSuchPaddingException ex) {
-            response = "{ERROR: NoSuchPaddingException (error with decryption) "+ ex.getMessage() + "}";
-        }
-        catch (InvalidKeyException ex) {
-            response = "{ERROR: Invalid Key Exception (error with decryption) "+ ex.getMessage() + "}";
-        }
-        catch (IllegalBlockSizeException ex) {
-            response = "{ERROR: Invalid Key Exception (error with decryption) "+ ex.getMessage() + "}";
-        }
-        catch (BadPaddingException ex) {
-            response = "{ERROR: Invalid Key Exception (error with decryption) "+ ex.getMessage() + "}";
-        }
-        //catch (JsonProcessingException ex) {
-        //    response = "{ERROR: JsonProcessingException "+ ex.getMessage() + "}";
-        //}
-        //return new BalanceMap(response.replace("\\", ""));
-        final HttpHeaders httpHeaders= new HttpHeaders();
-        httpHeaders.setContentType(MediaType.APPLICATION_JSON);
-        return new ResponseEntity<String>(response, httpHeaders, HttpStatus.OK);
+        return ResponseHandler.send(response);
     }
 }
