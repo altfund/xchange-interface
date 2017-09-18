@@ -25,7 +25,7 @@ public interface XChangeService {
     ObjectNode getExchangeTradeFees(Map<String, String> params);
     ObjectNode getExchangeBalances(ExchangeCredentials params);
     OrderResponse placeLimitOrder(Order order) throws Exception;
-    boolean cancelLimitOrder(Order order);
+    boolean cancelLimitOrder(Order order) throws Exception;
     String getTradeHistory(TradeHistory tradeHistory) throws Exception;
-    String getOpenOrders(OpenOrder openOrder);
+    String getOpenOrders(ExchangeCredentials exchangeCredentials) throws Exception;
 }

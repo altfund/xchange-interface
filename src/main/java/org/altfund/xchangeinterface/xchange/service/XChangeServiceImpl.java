@@ -237,7 +237,7 @@ public class XChangeServiceImpl implements XChangeService {
     }
 
     @Override
-    public boolean cancelLimitOrder(Order order) {
+    public boolean cancelLimitOrder(Order order) throws Exception {
         ExchangeCredentials exchangeCredentials = null;
         ObjectNode errorMap = jh.getObjectNode();
         TradeService tradeService = null;
@@ -248,6 +248,10 @@ public class XChangeServiceImpl implements XChangeService {
             tradeService = xChangeFactory.getTradeService(exchangeCredentials);
             orderResponse = tradeService.cancelOrder(order.getOrderId());
         }
+        catch (Exception e) {
+            throw e;
+        }
+        /*
         catch (IOException e) {
             log.error("XChangeServiceException {}: " + e, e.getMessage());
         }
@@ -257,6 +261,7 @@ public class XChangeServiceImpl implements XChangeService {
         catch (RuntimeException re) {
             log.error("Non-retyable error {}: " + re, re.getMessage());
         }
+        */
         return orderResponse;
     }
 
@@ -344,16 +349,17 @@ public class XChangeServiceImpl implements XChangeService {
             response = jh.getObjectMapper().writeValueAsString(userTrades);
 
         }
-        catch (Exception e) {
-            throw e;
+        catch (Exception ex) {
+            log.debug("{}: {}", ex.getMessage());
+            throw ex;
         }
         return response;
     }
 
     @Override
-    public String getOpenOrders(OpenOrder openOrder) {
-        ExchangeCredentials exchangeCredentials = null;
-        exchangeCredentials = openOrder.getExchangeCredentials();
+    public String getOpenOrders(ExchangeCredentials exchangeCredentials) throws Exception {
+        //ExchangeCredentials exchangeCredentials = null;
+        //exchangeCredentials = openOrder.getExchangeCredentials();
 
         org.knowm.xchange.service.trade.params.orders.OpenOrdersParams knowmOpenOrderParms = null;
         //knowmOpenOrderParms = openOrder.getOpenOrderParams();
@@ -369,18 +375,36 @@ public class XChangeServiceImpl implements XChangeService {
 
         try {
             tradeService = xChangeFactory.getTradeService(exchangeCredentials);
-            //tradeParams = tradeService.createTradeHistoryParams();
+            knowmOpenOrderParms = tradeService.createOpenOrdersParams();
 
+            /*
+            CurrencyPair cp = new CurrencyPair(
+                    openOrder.getOpenOrderParams().getBaseCurrency(),
+                    openOrder.getOpenOrderParams().getQuoteCurrency()
+                    );
+            */
+            //knowmOpenOrderParms.setCurrencyPair(cp);
+
+
+            /*
             knowmOpenOrderParms = dozerBeanMapper.map(
                                         openOrder.getOpenOrderParams(),
                                         org.knowm.xchange.service.trade.params.orders.OpenOrdersParams.class);
-
             openOrders = tradeService.getOpenOrders(knowmOpenOrderParms).getOpenOrders();
+            */
+
+            //openOrders = tradeService.getOpenOrders(knowmOpenOrderParms).getOpenOrders();
+            response = tradeService.getOpenOrders(knowmOpenOrderParms).toString();
+            log.debug("OPEN ORDERS: {}", response);
 
             //userTradesMap = JsonifyUserTrades.toJson(userTrades, exchangeCredentials.getExchange(), jh);
-            response = jh.getObjectMapper().writeValueAsString(openOrders);
+            //response = jh.getObjectMapper().writeValueAsString(openOrders);
 
         }
+        catch (Exception e) {
+            throw e;
+        }
+        /*
         //TODO return errors as json
         catch (IOException e) {
             log.error("XChangeServiceException {}: " + e, e.getMessage());
@@ -391,6 +415,7 @@ public class XChangeServiceImpl implements XChangeService {
         catch (RuntimeException re) {
             log.error("Non-retyable error {}: " + re, re.getMessage());
         }
+        */
         return response;
     }
 }

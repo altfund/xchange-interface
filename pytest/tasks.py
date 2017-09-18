@@ -15,8 +15,8 @@ from invoke import task
 #balance, cancelorder, limitorder, openorders, orderbook, json, ticker, tradefees, tradehistory,
 
 exchanges = ['GDAX', 'KRAKEN', 'POLONIEX', 'BITFINEX']
-default_limit_ask = {"order_type":"ASK","order_specs":{"base_currency":"ETH","quote_currency":"BTC","volume":"0.1","price":"10000","test":True}}
-default_limit_bid = {"order_type":"BID","order_specs":{"base_currency":"ETH","quote_currency":"BTC","volume":"1000000","price":"0.0001","test": True}}
+default_limit_ask = {"order_type":"ASK","order_specs":{"base_currency":"ETH","quote_currency":"BTC","volume":"0.1","price":"10000","test":False}}
+default_limit_bid = {"order_type":"BID","order_specs":{"base_currency":"ETH","quote_currency":"BTC","volume":"0.01","price":"0.0001","test": False}}
 
 def print_exchange_results(response, failure):
     failures = []
@@ -166,19 +166,20 @@ def requestOpenOrders(exchange):
     config = getConfig()
     response = {}
     temp = {}
-    orders_req = {}
-    temp.update({"currency_pair": "ETH/BTC"});
-    orders_req.update({"open_order_params": temp});
+    #orders_req = {}
+    #temp.update({"base_currency": "ETH"});
+    #temp.update({"quote_currency": "BTC"});
+    #orders_req.update({"open_order_params": temp});
     if exchange.lower() == 'all':
         for exchange in exchanges:
             creds = getCreds(exchange)
-            orders_req.update({"exchange_credentials": creds});
-            r = send(encrypt(orders_req, config), "openorders", config)
+            #orders_req.update({"exchange_credentials": creds});
+            r = send(encrypt(creds, config), "openorders", config)
             report(r, exchange.lower(), response)
     else:
         creds = getCreds(exchange)
-        orders_req.update({"exchange_credentials": creds});
-        r = send(encrypt(orders_req, config), "openorders", config)
+        #orders_req.update({"exchange_credentials": creds});
+        r = send(encrypt(creds, config), "openorders", config)
         report(r, exchange.lower(), response)
     print_report(response)
 
@@ -187,7 +188,8 @@ def requestTradeHistory(exchange):
     response = {}
     temp = {}
     history_req = {}
-    temp.update({"currency_pair": "BTC/ETH"});
+    #temp.update({"currency_pair": "ETH/BTC"});
+    temp.update({"page_length": "10"});
     history_req.update({"trade_params": temp});
     if exchange.lower() == 'all':
         for exchange in exchanges:

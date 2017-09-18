@@ -18,6 +18,7 @@ import org.altfund.xchangeinterface.xchange.model.Order;
 import org.altfund.xchangeinterface.xchange.model.OrderResponse;
 import org.altfund.xchangeinterface.xchange.model.TradeHistory;
 import org.altfund.xchangeinterface.xchange.model.OpenOrder;
+import org.altfund.xchangeinterface.xchange.model.ExchangeCredentials;
 import org.altfund.xchangeinterface.xchange.service.OrderDecryptor;
 import org.altfund.xchangeinterface.xchange.service.XChangeService;
 import org.altfund.xchangeinterface.restApi.util.ResponseHandler;
@@ -43,7 +44,7 @@ public class OpenOrdersController {
     private final JsonHelper jh;
     private EncryptedOrder encryptedOrder;
     private OrderDecryptor orderDecryptor;
-    private OpenOrder openOrder;
+    private ExchangeCredentials exchangeCredentials;
 
     public OpenOrdersController(XChangeService xChangeService, JsonHelper jh, OrderDecryptor orderDecryptor) {
         this.xChangeService = xChangeService;
@@ -60,9 +61,9 @@ public class OpenOrdersController {
             encryptedOrder = jh.getObjectMapper().readValue(response, EncryptedOrder.class);
             log.debug("rec iv {}.", encryptedOrder.getIv());
             log.debug("rec data {}.", encryptedOrder.getEncryptedData());
-            openOrder = jh.getObjectMapper().readValue( orderDecryptor.decrypt(encryptedOrder),
-                                                                  OpenOrder.class);
-            response = xChangeService.getOpenOrders(openOrder);
+            exchangeCredentials = jh.getObjectMapper().readValue( orderDecryptor.decrypt(encryptedOrder),
+                                                                  ExchangeCredentials.class);
+            response = xChangeService.getOpenOrders(exchangeCredentials);
         }
         catch (Exception ex) {
             return ResponseHandler.send(ex);

@@ -10,6 +10,12 @@ import java.util.Collection;
 @NoArgsConstructor
 public class OpenOrderParams {
 
+    @JsonProperty("base_currency")
+    private String baseCurrency;
+
+    @JsonProperty("quote_currency")
+    private String quoteCurrency;
+
     @JsonProperty("currency_pair")
     private CurrencyPair currencyPair;
 

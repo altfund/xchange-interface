@@ -78,6 +78,9 @@ public class ResponseHandler {
     }
 
     public static ResponseEntity<String> send(String res) {
+
+        if (res == null || res == "" || res == "null")
+            res = "{ERROR: No response, this error indicates an earlier error or issue was not handled properly.}";
         final HttpHeaders httpHeaders= new HttpHeaders();
         httpHeaders.setContentType(MediaType.APPLICATION_JSON);
         if(Pattern.compile(".*exchange_credentials.*").matcher(res.replace("\n", "").replace("\r", "")).matches()) {

@@ -20,8 +20,8 @@
                                    passphrase="<passphrase>" // String
                                },
         open_order_params: {
-                            currency_pair: "<currency_pair>", // CurrencyPair
-                            currency_pairs: ["<currency_pair>", ...  ] // CurrencyPair[]
+                            base_currency: "<base_currency>",
+                            quote_currency: "<quote_currency>",
                       } 
        }
 ```
