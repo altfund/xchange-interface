@@ -19,7 +19,7 @@ import java.util.Map;
  */
 public interface XChangeService {
 
-    Map<String, String> getExchangeCurrencies(String exhange);
+    ObjectNode getExchangeCurrencies(String exhange);
     ObjectNode getTickers(String exchange);
     ObjectNode getOrderBooks(Map<String, String> params);
     ObjectNode getExchangeTradeFees(Map<String, String> params);

@@ -3,14 +3,13 @@ package org.altfund.xchangeinterface.restApi.ticker;
 import java.util.Map;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.altfund.xchangeinterface.xchange.service.XChangeService;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.altfund.xchangeinterface.util.JsonHelper;
+import org.altfund.xchangeinterface.restApi.util.ResponseHandler;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 /*
@@ -22,10 +21,12 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 public class TickerController {
     private final XChangeService xChangeService;
     private final JsonHelper jh;
+    private final ResponseHandler rh;
 
-    public TickerController(XChangeService xChangeService, JsonHelper jh) {
+    public TickerController(XChangeService xChangeService, JsonHelper jh, ResponseHandler rh) {
         this.xChangeService = xChangeService;
         this.jh = jh;
+        this.rh = rh;
     }
 
     @RequestMapping(value = "/ticker", produces = "application/json")
@@ -37,8 +38,6 @@ public class TickerController {
         } catch (JsonProcessingException ex) {
             response = "{\"ERROR\":\"JsonProcessingException:"+ ex.getMessage() + "\"}";
         }
-        final HttpHeaders httpHeaders= new HttpHeaders();
-        httpHeaders.setContentType(MediaType.APPLICATION_JSON);
-        return new ResponseEntity<String>(response, httpHeaders, HttpStatus.OK);
+        return rh.send(response, true);
     }
 }

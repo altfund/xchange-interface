@@ -52,18 +52,6 @@ public class XChangeServiceConfig {
     return new XChangeServiceImpl(xChangeFactory, jh, limitOrderPlacer, dozerBeanMapper);
   }
 
-  /*
-  @Bean
-  public BalanceController balanceController(XChangeService xChangeService, JsonHelper jh, MessageEncryption messageEncryption, ResponseHandler rh) {
-    return new BalanceController(xChangeService, jh, messageEncryption, rh);
-  }
-  */
-
-  @Bean
-  public CurrencyController currencyController(XChangeService xChangeService) {
-    return new CurrencyController(xChangeService);
-  }
-
   @Bean
   public JsonNodeFactory jsonNodeFactory() {
     return new JsonNodeFactory(true);

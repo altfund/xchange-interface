@@ -7,12 +7,14 @@ import java.util.Optional;
 import java.util.NoSuchElementException;
 import org.knowm.xchange.currency.Currency;
 import org.knowm.xchange.dto.meta.CurrencyMetaData;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.altfund.xchangeinterface.util.JsonHelper;
 
 @Slf4j
 public class JsonifyCurrencies {
-    public static Map<String, String> toJson(Map<Currency, CurrencyMetaData> currencies, String exchange) {
-        Map<String, String> json = new TreeMap<>();
-        Map<String, String> errorMap = new TreeMap<>();
+    public static ObjectNode toJson(Map<Currency, CurrencyMetaData> currencies, String exchange, JsonHelper jh) {
+        ObjectNode json = jh.getObjectNode();
+        ObjectNode errorMap = jh.getObjectNode();
         Optional<String> currencyString;
         Optional<String> currencyDisplayName;
         String key;

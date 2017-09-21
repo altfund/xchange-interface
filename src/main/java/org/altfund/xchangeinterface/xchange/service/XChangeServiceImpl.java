@@ -66,10 +66,11 @@ public class XChangeServiceImpl implements XChangeService {
     }
 
     @Override
-    public Map<String, String> getExchangeCurrencies(String exchange) {
+    public ObjectNode getExchangeCurrencies(String exchange) {
         Optional<ExchangeMetaData>  metaData;
-        Map<String, String> currencyMap;
-        Map<String, String> errorMap = new TreeMap<>();
+        ObjectNode currencyMap = jh.getObjectNode();
+        ObjectNode errorMap = jh.getObjectNode();
+
         try {
             //xChangeFactory.setProperties(exchange);
             metaData = Optional.ofNullable(xChangeFactory.getExchangeMetaData(exchange));
@@ -78,11 +79,10 @@ public class XChangeServiceImpl implements XChangeService {
                 return errorMap;
             }
 
-            currencyMap =  JsonifyCurrencies.toJson(metaData.get().getCurrencies(), exchange);
+            currencyMap =  JsonifyCurrencies.toJson(metaData.get().getCurrencies(), exchange, jh);
         }
         catch (XChangeServiceException ex) {
             // import java.time.LocalDateTime;
-            errorMap = new TreeMap<>();
             errorMap.put("ERROR", ex.getMessage());
             return errorMap;
         }
@@ -325,7 +325,6 @@ public class XChangeServiceImpl implements XChangeService {
     @Override
     public String getTradeHistory(TradeHistory tradeHistory) throws Exception {
         ExchangeCredentials exchangeCredentials = null;
-        ObjectNode errorMap = jh.getObjectNode();
         TradeService tradeService = null;
         CurrencyPair currencyPair = null;
         TradeHistoryParams tradeHistoryParams = null;
