@@ -14,7 +14,7 @@ import org.altfund.xchangeinterface.xchange.service.XChangeService;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.altfund.xchangeinterface.util.JsonHelper;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import org.altfund.xchangeinterface.xchange.service.OrderDecryptor;
+import org.altfund.xchangeinterface.xchange.service.MessageEncryption;
 
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
@@ -36,14 +36,16 @@ import org.altfund.xchangeinterface.restApi.util.ResponseHandler;
 public class BalanceController {
     private final XChangeService xChangeService;
     private final JsonHelper jh;
+    private final ResponseHandler rh;
     private EncryptedOrder encryptedOrder;
-    private OrderDecryptor orderDecryptor;
+    private MessageEncryption messageEncryption;
     private ExchangeCredentials exchangeCredentials;
 
-    public BalanceController(XChangeService xChangeService, JsonHelper jh, OrderDecryptor orderDecryptor) {
+    public BalanceController(XChangeService xChangeService, JsonHelper jh, MessageEncryption messageEncryption, ResponseHandler rh) {
         this.xChangeService = xChangeService;
         this.jh = jh;
-        this.orderDecryptor = orderDecryptor;
+        this.rh = rh;
+        this.messageEncryption = messageEncryption;
     }
 
     @RequestMapping(value = "/balance", produces = "application/json")
@@ -55,7 +57,7 @@ public class BalanceController {
             encryptedOrder = jh.getObjectMapper().readValue(response, EncryptedOrder.class);
             log.debug("rec iv {}.", encryptedOrder.getIv());
             log.debug("rec data {}.", encryptedOrder.getEncryptedData());
-            exchangeCredentials = jh.getObjectMapper().readValue( orderDecryptor.decrypt(encryptedOrder),
+            exchangeCredentials = jh.getObjectMapper().readValue( messageEncryption.decrypt(encryptedOrder),
                                                                   ExchangeCredentials.class);
             //encrypted order needs to decrypt to a Map<String, String> :(
             //probs change that to a pojo like in ee.
@@ -63,8 +65,8 @@ public class BalanceController {
             response = jh.getObjectMapper().writeValueAsString(json);
         }
         catch (Exception ex) {
-            return ResponseHandler.send(ex);
+            return rh.send(ex, true);
         }
-        return ResponseHandler.send(response);
+        return rh.send(response, true);
     }
 }

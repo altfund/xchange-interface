@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.altfund.xchangeinterface.util.JsonHelper;
 import org.altfund.xchangeinterface.xchange.model.EncryptedOrder;
 import org.altfund.xchangeinterface.xchange.model.Order;
-import org.altfund.xchangeinterface.xchange.service.OrderDecryptor;
+import org.altfund.xchangeinterface.xchange.service.MessageEncryption;
 import org.altfund.xchangeinterface.xchange.service.XChangeService;
 
 import java.io.IOException;
@@ -27,6 +27,7 @@ import java.security.InvalidKeyException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.BadPaddingException;
 
+import java.io.UnsupportedEncodingException;
 import org.knowm.xchange.exceptions.NotYetImplementedForExchangeException;
 import org.knowm.xchange.exceptions.ExchangeException;
 import org.knowm.xchange.exceptions.NotAvailableFromExchangeException;
@@ -42,7 +43,14 @@ import org.knowm.xchange.exceptions.NotAvailableFromExchangeException;
  */
 @Slf4j
 public class ResponseHandler {
-    public static ResponseEntity<String> send(Exception ex) {
+
+    private MessageEncryption messageEncryption;
+
+    public ResponseHandler(MessageEncryption messageEncryption) {
+        this.messageEncryption = messageEncryption;
+    }
+
+    public ResponseEntity<String> send(Exception ex, boolean doEncrypt) {
         String response = "";
         if (ex instanceof IOException) {
             response = "{ERROR: IOException "+ ex.getMessage() + "}";
@@ -60,29 +68,43 @@ public class ResponseHandler {
             response = "{ERROR: NotYetImplementedForExchangeException "+ ex.getMessage() + "}";
         }
         else if (ex instanceof NoSuchAlgorithmException) {
-            response = "{ERROR: NoSuchAlgorithmException (error with decryption) "+ ex.getMessage() + "}";
+            response = "{ERROR: NoSuchAlgorithmException (error with encryption) "+ ex.getMessage() + "}";
         }
         else if (ex instanceof NoSuchPaddingException) {
-            response = "{ERROR: NoSuchPaddingException (error with decryption) "+ ex.getMessage() + "}";
+            response = "{ERROR: NoSuchPaddingException (error with encryption) "+ ex.getMessage() + "}";
         }
         else if (ex instanceof InvalidKeyException) {
-            response = "{ERROR: Invalid Key Exception (error with decryption) "+ ex.getMessage() + "}";
+            response = "{ERROR: Invalid Key Exception (error with encryption) "+ ex.getMessage() + "}";
         }
         else if (ex instanceof IllegalBlockSizeException) {
-            response = "{ERROR: Illegal Block Size Exception (error with decryption) "+ ex.getMessage() + "}";
+            response = "{ERROR: Illegal Block Size Exception (error with encryption) "+ ex.getMessage() + "}";
         }
         else if (ex instanceof BadPaddingException) {
-            response = "{ERROR: BadPaddingException (error with decryption) "+ ex.getMessage() + "}";
+            response = "{ERROR: BadPaddingException (error with encryption) "+ ex.getMessage() + "}";
         }
-        return send(response);
+        else if (ex instanceof UnsupportedEncodingException) {
+            response = "{ERROR: UnsupportedEncodingException (error with encryption) "+ ex.getMessage() + "}";
+        }
+        return send(response, doEncrypt);
     }
 
-    public static ResponseEntity<String> send(String res) {
+    public ResponseEntity<String> send(String res, boolean doEncrypt) {
 
         if (res == null || res == "" || res == "null")
             res = "{ERROR: No response, this error indicates an earlier error or issue was not handled properly.}";
         final HttpHeaders httpHeaders= new HttpHeaders();
         httpHeaders.setContentType(MediaType.APPLICATION_JSON);
+        if (doEncrypt) {
+            try {
+                return new ResponseEntity<String>(messageEncryption.encrypt(res), httpHeaders, HttpStatus.OK);
+            }
+            catch (Exception ex) {
+                log.error("ERROR while encrypting response {}\nstacktrade\n{}", ex.getMessage(), ex.getStackTrace());
+                send(ex, false);
+            }
+        }
+        return new ResponseEntity<String>(res, httpHeaders, HttpStatus.OK);
+        /*
         if(Pattern.compile(".*exchange_credentials.*").matcher(res.replace("\n", "").replace("\r", "")).matches()) {
             log.debug("not transmitting credentials: {}", res);
             return new ResponseEntity<String>( res.substring(0, res.indexOf("exchange_credentials")) + " REDACTED", httpHeaders, HttpStatus.OK);
@@ -91,5 +113,6 @@ public class ResponseHandler {
             log.debug("transmitting {}", res);
             return new ResponseEntity<String>(res, httpHeaders, HttpStatus.OK);
         }
+        */
     }
 }

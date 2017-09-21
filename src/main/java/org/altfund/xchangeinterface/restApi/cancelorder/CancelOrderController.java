@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.altfund.xchangeinterface.util.JsonHelper;
 import org.altfund.xchangeinterface.xchange.model.EncryptedOrder;
 import org.altfund.xchangeinterface.xchange.model.Order;
-import org.altfund.xchangeinterface.xchange.service.OrderDecryptor;
+import org.altfund.xchangeinterface.xchange.service.MessageEncryption;
 import org.altfund.xchangeinterface.xchange.service.XChangeService;
 import org.altfund.xchangeinterface.restApi.util.ResponseHandler;
 
@@ -38,14 +38,16 @@ import javax.crypto.BadPaddingException;
 public class CancelOrderController {
     private final XChangeService xChangeService;
     private final JsonHelper jh;
+    private final ResponseHandler rh;
     private EncryptedOrder encryptedOrder;
-    private OrderDecryptor orderDecryptor;
+    private MessageEncryption messageEncryption;
     private Order order;
 
-    public CancelOrderController(XChangeService xChangeService, JsonHelper jh, OrderDecryptor orderDecryptor) {
+    public CancelOrderController(XChangeService xChangeService, JsonHelper jh, MessageEncryption messageEncryption, ResponseHandler rh) {
         this.xChangeService = xChangeService;
         this.jh = jh;
-        this.orderDecryptor = orderDecryptor;
+        this.rh = rh;
+        this.messageEncryption = messageEncryption;
     }
 
     @RequestMapping(value = "/cancelorder", produces = "application/json")
@@ -57,7 +59,7 @@ public class CancelOrderController {
             encryptedOrder = jh.getObjectMapper().readValue(response, EncryptedOrder.class);
             log.debug("rec iv {}.", encryptedOrder.getIv());
             log.debug("rec data {}.", encryptedOrder.getEncryptedData());
-            order = jh.getObjectMapper().readValue( orderDecryptor.decrypt(encryptedOrder),
+            order = jh.getObjectMapper().readValue( messageEncryption.decrypt(encryptedOrder),
                                                                   Order.class);
             //encrypted order needs to decrypt to a Map<String, String> :(
             //probs change that to a pojo like in ee.
@@ -65,8 +67,8 @@ public class CancelOrderController {
             response = jh.getObjectMapper().writeValueAsString(orderResponse);
         }
         catch (Exception ex) {
-            return ResponseHandler.send(ex);
+            return rh.send(ex, true);
         }
-        return ResponseHandler.send(response);
+        return rh.send(response, true);
     }
 }

@@ -53,6 +53,7 @@ def print_report(response):
         print("==============================================================")
 
 def report(data, exchange, response):
+    data = decrypt(data)
     if (data == None or 'ERROR' in data or 'exception' in data or 'error' in data or re.match(r'.*error.*', data.lower()) or re.match(r'.*redacted.*', data.lower())):
         response.update({"error": True})
         response.update({exchange.upper(): data})
@@ -65,6 +66,33 @@ def send(data, method, config):
     r = requests.get(config.get('xi_url') + "/" + method, params=data).text
     json_data = json.loads(json.dumps(r))
     return json_data
+
+def decrypt(payload):
+    config = getConfig()
+    payload = json.loads(payload)
+    init_vector = payload['iv']
+    encrypted_data = payload['encrypted_data']
+    print("init vector raw ", init_vector, " ", len( init_vector ))
+    print("encrypted data raw ", encrypted_data, " ", len( encrypted_data))
+    init_vector = base64.b64decode(init_vector)
+    encrypted_data = base64.b64decode(encrypted_data)
+
+    print("init vector base 64 ", init_vector,  " ", len( init_vector ))
+    print("encrypted database 64 ", encrypted_data, " ",  len( encrypted_data))
+
+    #init_vector = init_vector.decode('utf-8')
+    #encrypted_data = encrypted_data.decode('utf-8')
+
+    #print("init vector utf8 decoded ", init_vector,  " ", len( init_vector ))
+    #print("encrypted data utf8 decoded  ", encrypted_data, " ",  len( encrypted_data))
+
+    encryption_suite = AES.new(config['aes_key'], AES.MODE_CFB, init_vector)
+
+    #json_data = json.dumps(data)
+
+    plain_text = encryption_suite.decrypt(encrypted_data)
+    plain_text = plain_text.decode('utf-8')
+    return plain_text
 
 def encrypt(data, config):
     #https://stackoverflow.com/questions/2257441/random-string-generation-with-upper-case-letters-and-digits-in-python

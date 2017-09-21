@@ -5,6 +5,7 @@ import org.altfund.xchangeinterface.xchange.service.XChangeFactoryImpl;
 import org.altfund.xchangeinterface.xchange.service.XChangeService;
 import org.altfund.xchangeinterface.xchange.service.XChangeServiceImpl;
 import org.altfund.xchangeinterface.xchange.service.util.LimitOrderPlacer;
+import org.altfund.xchangeinterface.restApi.util.ResponseHandler;
 import org.dozer.DozerBeanMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -13,7 +14,7 @@ import org.altfund.xchangeinterface.restApi.balance.BalanceController;
 import org.altfund.xchangeinterface.util.JsonHelper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.altfund.xchangeinterface.xchange.service.OrderDecryptor;
+import org.altfund.xchangeinterface.xchange.service.MessageEncryption;
 
 /**
  * altfund
@@ -32,8 +33,13 @@ public class XChangeServiceConfig {
   }
 
   @Bean
-  public OrderDecryptor orderDecryptor() {
-    return new OrderDecryptor();
+  public ResponseHandler responseHandler(MessageEncryption me) {
+    return new ResponseHandler(me);
+  }
+
+  @Bean
+  public MessageEncryption messageEncryption(JsonHelper jh) {
+    return new MessageEncryption(jh);
   }
 
   @Bean
@@ -46,10 +52,12 @@ public class XChangeServiceConfig {
     return new XChangeServiceImpl(xChangeFactory, jh, limitOrderPlacer, dozerBeanMapper);
   }
 
+  /*
   @Bean
-  public BalanceController balanceController(XChangeService xChangeService, JsonHelper jh, OrderDecryptor orderDecryptor) {
-    return new BalanceController(xChangeService, jh, orderDecryptor);
+  public BalanceController balanceController(XChangeService xChangeService, JsonHelper jh, MessageEncryption messageEncryption, ResponseHandler rh) {
+    return new BalanceController(xChangeService, jh, messageEncryption, rh);
   }
+  */
 
   @Bean
   public CurrencyController currencyController(XChangeService xChangeService) {
