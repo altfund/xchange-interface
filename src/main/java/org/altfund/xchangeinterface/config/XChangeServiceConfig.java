@@ -10,7 +10,7 @@ import org.dozer.DozerBeanMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.altfund.xchangeinterface.restApi.currency.CurrencyController;
-import org.altfund.xchangeinterface.restApi.balance.BalanceController;
+import org.altfund.xchangeinterface.api.balance.BalanceEndpoint;
 import org.altfund.xchangeinterface.util.JsonHelper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -21,6 +21,7 @@ import org.altfund.xchangeinterface.xchange.service.MessageEncryption;
  */
 @Configuration
 public class XChangeServiceConfig {
+
 
   @Bean
   public LimitOrderPlacer limitOrderPlacer() {
@@ -50,6 +51,11 @@ public class XChangeServiceConfig {
   @Bean
   public XChangeService xChangeService(XChangeFactory xChangeFactory, JsonHelper jh, LimitOrderPlacer limitOrderPlacer, DozerBeanMapper dozerBeanMapper) {
     return new XChangeServiceImpl(xChangeFactory, jh, limitOrderPlacer, dozerBeanMapper);
+  }
+
+  @Bean
+  public BalanceEndpoint balanceEndpoint(XChangeService xs, JsonHelper jh, ResponseHandler rh) {
+    return new BalanceEndpoint(xs, jh, rh);
   }
 
   @Bean

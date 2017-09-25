@@ -1,4 +1,4 @@
-package org.altfund.xchangeinterface.restApi.balance;
+package org.altfund.xchangeinterface.api.balance;
 
 import java.util.Map;
 import org.altfund.xchangeinterface.xchange.model.EncryptedOrder;
@@ -15,7 +15,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.altfund.xchangeinterface.util.JsonHelper;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.altfund.xchangeinterface.xchange.service.MessageEncryption;
-import org.altfund.xchangeinterface.api.balance.BalanceEndpoint;
 
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
@@ -32,46 +31,32 @@ import org.altfund.xchangeinterface.restApi.util.ResponseHandler;
  * @RequestMapping maps all HTTP operations by default. Use
  * @RequestMapping(method=GET) to narrow this mapping.
  */
-@RestController
 @Slf4j
-public class BalanceController {
-    private EncryptedOrder encryptedOrder;
-    private final MessageEncryption messageEncryption;
-    /*
+public class BalanceEndpoint {
     private final XChangeService xChangeService;
-    private ExchangeCredentials exchangeCredentials;
-    */
     private final JsonHelper jh;
     private final ResponseHandler rh;
-    private final BalanceEndpoint balance;
+    private ExchangeCredentials exchangeCredentials;
 
-    //public BalanceController(XChangeService xChangeService, JsonHelper jh, MessageEncryption messageEncryption, ResponseHandler rh) {
-    public BalanceController(BalanceEndpoint balance, ResponseHandler rh, MessageEncryption messageEncryption, JsonHelper jh) {
-        this.balance = balance;
-        this.rh = rh;
-        this.messageEncryption = messageEncryption;
-        this.jh = jh;
-        /*
+    public BalanceEndpoint(XChangeService xChangeService, JsonHelper jh, ResponseHandler rh) {
         this.xChangeService = xChangeService;
-        */
+        this.jh = jh;
+        this.rh = rh;
     }
 
-    @RequestMapping(value = "/balance", produces = "application/json")
-    public ResponseEntity<String> balance(@RequestParam Map<String, String> params) {
+    public String getBalance(String jsonExchangeCredentials) {
         String response = "";
         try {
-            response = jh.getObjectMapper().writeValueAsString(params);
-            log.debug("rec str {}.", response);
-            encryptedOrder = jh.getObjectMapper().readValue(response, EncryptedOrder.class);
-            log.debug("rec iv {}.", encryptedOrder.getIv());
-            log.debug("rec data {}.", encryptedOrder.getEncryptedData());
-
-
-            response = balance.getBalance(messageEncryption.decrypt(encryptedOrder));
+            //encrypted order needs to decrypt to a Map<String, String> :(
+            //probs change that to a pojo like in ee.
+            exchangeCredentials = jh.getObjectMapper().readValue( jsonExchangeCredentials,
+                                                                  ExchangeCredentials.class);
+            ObjectNode json = xChangeService.getExchangeBalances(exchangeCredentials);
+            response = jh.getObjectMapper().writeValueAsString(json);
         }
         catch (Exception ex) {
-            return rh.send(ex, true);
+            return rh.send(ex);
         }
-        return rh.send(response, true);
+        return response;
     }
 }

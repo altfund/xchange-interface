@@ -50,7 +50,7 @@ public class ResponseHandler {
         this.messageEncryption = messageEncryption;
     }
 
-    public ResponseEntity<String> send(Exception ex, boolean doEncrypt) {
+    public String getErrorString(Exception ex) {
         String response = "";
         if (ex instanceof IOException) {
             response = "{ERROR: IOException "+ ex.getMessage() + "}";
@@ -85,7 +85,15 @@ public class ResponseHandler {
         else if (ex instanceof UnsupportedEncodingException) {
             response = "{ERROR: UnsupportedEncodingException (error with encryption) "+ ex.getMessage() + "}";
         }
-        return send(response, doEncrypt);
+        return response;
+    }
+
+    public String send(Exception ex) {
+        return getErrorString(ex);
+    }
+
+    public ResponseEntity<String> send(Exception ex, boolean doEncrypt) {
+        return send(getErrorString(ex), doEncrypt);
     }
 
     public ResponseEntity<String> send(String res, boolean doEncrypt) {
