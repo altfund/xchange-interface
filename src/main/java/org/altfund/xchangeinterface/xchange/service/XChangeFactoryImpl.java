@@ -7,6 +7,7 @@ import java.util.Set;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.function.Consumer;
+import java.lang.IllegalStateException;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -56,7 +57,7 @@ public class XChangeFactoryImpl implements XChangeFactory {
                     Optional.ofNullable(exchangeMap.get(exchangeName));
 
                 if (!exchangeSecondTry.isPresent()) {
-                    throw new XChangeServiceException("Unknown exchange on second try: " + exchangeName);
+                    throw new XChangeServiceException("Unknown exchange/exchange init failure,   on second try: " + exchangeName);
                 }
                 else {
                     log.debug("Adding new exchange {}, calling remote init manually.", exchangeName);
@@ -74,7 +75,7 @@ public class XChangeFactoryImpl implements XChangeFactory {
                     return dispatcher.comeback(exchangeSecondTry.get());
                 }
             } else {
-                throw new XChangeServiceException("Unknown exchange, couldn't set properties with params: " + exchangeName);
+                throw new XChangeServiceException("Unknown exchange/exchange init failure, couldn't set properties with params: " + exchangeName);
             }
         }
         else {
@@ -100,7 +101,7 @@ public class XChangeFactoryImpl implements XChangeFactory {
                     Optional.ofNullable(exchangeCredsMap.get(exchangeCredentials));
 
                 if (!exchangeSecondTry.isPresent()) {
-                    throw new XChangeServiceException("Unknown exchange on second try: " + exchangeCredentials.getExchange());
+                    throw new XChangeServiceException("Unknown exchange/exchange init failure on second try: " + exchangeCredentials.getExchange());
                 }
                 else {
                     log.debug("Adding new exchange {}, calling remote init manually.", exchangeCredentials.getExchange());
@@ -118,7 +119,7 @@ public class XChangeFactoryImpl implements XChangeFactory {
                     return dispatcher.comeback(exchangeSecondTry.get());
                 }
             } else {
-                throw new XChangeServiceException("Unknown exchange, couldn't set properties with params: " + exchangeCredentials.getExchange());
+                throw new XChangeServiceException("Unknown exchange/exchange init failure, couldn't set properties with params: " + exchangeCredentials.getExchange());
             }
         }
         else {
@@ -286,8 +287,15 @@ public class XChangeFactoryImpl implements XChangeFactory {
                     exchangeMap.put(exchangeName, ExchangeFactory.INSTANCE.createExchange(exchangeSpecification));
                     log.debug("Added exchange " + exchangeName);
                     return true;
-                } catch (ExchangeException ee) {
-                    log.error("Couldn't create XChange " + exchange, ee);
+                } catch (ExchangeException ex) {
+                    log.error("Couldn't create XChange {},\n{}", exchangeName, ex.getStackTrace());
+                    return false;
+                }
+                catch (IllegalStateException ex) {
+                    log.error("Couldn't create XChange {},\n{}", exchangeName, ex.getStackTrace());
+                    return false;
+                } catch (Exception ex) {
+                    log.error("Couldn't create XChange {},\n{}", exchangeName, ex.getStackTrace());
                     return false;
                 }
             }
