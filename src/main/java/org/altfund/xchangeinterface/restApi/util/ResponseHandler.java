@@ -33,14 +33,15 @@ import org.knowm.xchange.exceptions.ExchangeException;
 import org.knowm.xchange.exceptions.NotAvailableFromExchangeException;
 
 
-//TODO use jsonify exceptions?
-//import org.altfund.xchangeinterface.xchange.service.util.JsonifyExceptions;
+//TODO use extract exceptions?
+//import org.altfund.xchangeinterface.xchange.service.util.ExtractExceptions;
 
 /*
  * The above example does not specify GET vs. PUT, POST, and so forth, because
  * @RequestMapping maps all HTTP operations by default. Use
  * @RequestMapping(method=GET) to narrow this mapping.
  */
+
 @Slf4j
 public class ResponseHandler {
 

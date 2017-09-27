@@ -8,7 +8,7 @@ import org.knowm.xchange.exceptions.NotAvailableFromExchangeException;
 import org.knowm.xchange.exceptions.NotYetImplementedForExchangeException;
 import java.io.IOException;
 
-public class JsonifyExceptions {
+public class ExtractExceptions {
 
     public static ObjectNode toJson(Exception e, JsonHelper jh) {
         ObjectNode errorMap = jh.getObjectNode();

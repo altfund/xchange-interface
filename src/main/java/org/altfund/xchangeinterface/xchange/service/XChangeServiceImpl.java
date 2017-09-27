@@ -32,12 +32,12 @@ import org.altfund.xchangeinterface.xchange.model.TradeHistory;
 import org.altfund.xchangeinterface.xchange.model.TradeHistoryParams;
 import org.altfund.xchangeinterface.xchange.model.OpenOrder;
 import org.altfund.xchangeinterface.util.JsonHelper;
-import org.altfund.xchangeinterface.xchange.service.util.JsonifyCurrencies;
-import org.altfund.xchangeinterface.xchange.service.util.JsonifyExchangeTickers;
-import org.altfund.xchangeinterface.xchange.service.util.JsonifyOrderBooks;
-import org.altfund.xchangeinterface.xchange.service.util.JsonifyTradeFees;
-import org.altfund.xchangeinterface.xchange.service.util.JsonifyBalances;
-//import org.altfund.xchangeinterface.xchange.service.util.JsonifyUserTrades;
+import org.altfund.xchangeinterface.xchange.service.util.ExtractCurrencies;
+import org.altfund.xchangeinterface.xchange.service.util.ExtractExchangeTickers;
+import org.altfund.xchangeinterface.xchange.service.util.ExtractOrderBooks;
+import org.altfund.xchangeinterface.xchange.service.util.ExtractTradeFees;
+import org.altfund.xchangeinterface.xchange.service.util.ExtractBalances;
+//import org.altfund.xchangeinterface.xchange.service.util.ExtractUserTrades;
 import org.altfund.xchangeinterface.xchange.service.util.LimitOrderPlacer;
 
 import java.io.IOException;
@@ -79,7 +79,7 @@ public class XChangeServiceImpl implements XChangeService {
                 return errorMap;
             }
 
-            currencyMap =  JsonifyCurrencies.toJson(metaData.get().getCurrencies(), exchange, jh);
+            currencyMap =  ExtractCurrencies.toJson(metaData.get().getCurrencies(), exchange, jh);
         }
         catch (XChangeServiceException ex) {
             // import java.time.LocalDateTime;
@@ -114,7 +114,7 @@ public class XChangeServiceImpl implements XChangeService {
                 return errorMap;
             }
 
-            tickerMap =  JsonifyExchangeTickers.toJson(currencyPairs.get(), marketDataService.get(), exchange, jh);
+            tickerMap =  ExtractExchangeTickers.toJson(currencyPairs.get(), marketDataService.get(), exchange, jh);
         }
         catch (IOException ex) {
             // import java.time.LocalDateTime;
@@ -143,7 +143,7 @@ public class XChangeServiceImpl implements XChangeService {
             }
 
             //params for this method are needed because it has "base_currency" and "quote_currency"
-            orderBookMap =  JsonifyOrderBooks.toJson(marketDataService.get(), params, jh);
+            orderBookMap =  ExtractOrderBooks.toJson(marketDataService.get(), params, jh);
         }
         catch (XChangeServiceException ex) {
             // import java.time.LocalDateTime;
@@ -172,7 +172,7 @@ public class XChangeServiceImpl implements XChangeService {
                 return errorMap;
             }
 
-            tradeMap =  JsonifyTradeFees.toJson(metaData.get().getCurrencyPairs(), params.get("exchange"), jh);
+            tradeMap =  ExtractTradeFees.toJson(metaData.get().getCurrencyPairs(), params.get("exchange"), jh);
         }
         catch (XChangeServiceException ex) {
             // import java.time.LocalDateTime;
@@ -220,7 +220,7 @@ public class XChangeServiceImpl implements XChangeService {
                 return errorMap;
             }
 
-            balanceMap = JsonifyBalances.toJson(wallets.get(), exchangeCredentials.getExchange(), jh);
+            balanceMap = ExtractBalances.toJson(wallets.get(), exchangeCredentials.getExchange(), jh);
         }
         catch (XChangeServiceException ex) {
             // import java.time.LocalDateTime;
@@ -396,7 +396,7 @@ public class XChangeServiceImpl implements XChangeService {
             response = tradeService.getOpenOrders(knowmOpenOrderParms).toString();
             log.debug("OPEN ORDERS: {}", response);
 
-            //userTradesMap = JsonifyUserTrades.toJson(userTrades, exchangeCredentials.getExchange(), jh);
+            //userTradesMap = ExtractUserTrades.toJson(userTrades, exchangeCredentials.getExchange(), jh);
             //response = jh.getObjectMapper().writeValueAsString(openOrders);
 
         }

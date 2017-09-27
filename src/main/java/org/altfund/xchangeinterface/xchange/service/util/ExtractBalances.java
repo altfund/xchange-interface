@@ -1,6 +1,6 @@
 package org.altfund.xchangeinterface.xchange.service.util;
 
-import org.altfund.xchangeinterface.xchange.service.util.JsonifyExceptions;
+import org.altfund.xchangeinterface.xchange.service.util.ExtractExceptions;
 import lombok.extern.slf4j.Slf4j;
 import java.util.List;
 import java.util.Map;
@@ -14,7 +14,7 @@ import org.knowm.xchange.dto.account.Wallet;
 import java.util.Optional;
 
 @Slf4j
-public class JsonifyBalances {
+public class ExtractBalances {
 
     public static ObjectNode toJson(
             Map<String, Wallet> wallets,

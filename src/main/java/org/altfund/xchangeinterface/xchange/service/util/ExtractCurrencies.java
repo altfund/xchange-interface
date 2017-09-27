@@ -11,7 +11,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.altfund.xchangeinterface.util.JsonHelper;
 
 @Slf4j
-public class JsonifyCurrencies {
+public class ExtractCurrencies {
     public static ObjectNode toJson(Map<Currency, CurrencyMetaData> currencies, String exchange, JsonHelper jh) {
         ObjectNode json = jh.getObjectNode();
         ObjectNode errorMap = jh.getObjectNode();

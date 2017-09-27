@@ -28,7 +28,7 @@ import static org.altfund.xchangeinterface.xchange.model.OrderStatusTypes.NETWOR
 import static org.altfund.xchangeinterface.xchange.model.OrderStatusTypes.UNKNOWN_ERROR;
 
 import java.io.IOException;
-import org.altfund.xchangeinterface.xchange.service.util.JsonifyExceptions;
+import org.altfund.xchangeinterface.xchange.service.util.ExtractExceptions;
 import org.altfund.xchangeinterface.xchange.service.exceptions.XChangeServiceException;
 import org.knowm.xchange.exceptions.ExchangeException;
 import org.knowm.xchange.exceptions.NotAvailableFromExchangeException;
