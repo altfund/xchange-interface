@@ -158,6 +158,34 @@ public class XChangeServiceImpl implements XChangeService {
         return orderBookMap;
     }
 
+    /*
+    public ObjectNode getAggregatedOrderBooks(Map<String, String> params) {
+        MarketDataService  marketDataService;
+        OrderBook orderBook = null;
+        ObjectNode errorMap = jh.getObjectNode();
+
+        try {
+            //xChangeFactory.setProperties(params.get("exchange"));
+            //marketDataService = Optional.ofNullable(xChangeFactory.getMarketDataService(params.get( "exchange" )));
+            marketDataService = xChangeFactory.getMarketDataService(params.get("exchange"));
+
+            //params for this method are needed because it has "base_currency" and "quote_currency"
+            orderBookMap =  ExtractOrderBooks.raw(marketDataService, params, jh);
+        }
+        catch (XChangeServiceException ex) {
+            // import java.time.LocalDateTime;
+            errorMap.put("ERROR", ex.getMessage());
+            return errorMap;
+        }
+        catch (IOException ex) {
+            // import java.time.LocalDateTime;
+            errorMap.put("ERROR", ex.getMessage());
+            return errorMap;
+        }
+        return orderBookMap;
+    }
+    */
+
     @Override
     public ObjectNode getExchangeTradeFees(Map<String, String> params) {
         Optional<ExchangeMetaData>  metaData;

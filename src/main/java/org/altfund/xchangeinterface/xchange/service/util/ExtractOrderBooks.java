@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.knowm.xchange.service.marketdata.MarketDataService;
 import org.altfund.xchangeinterface.xchange.service.exceptions.XChangeServiceException;
 import org.altfund.xchangeinterface.util.JsonHelper;
+import org.altfund.xchangeinterface.util.KWayMerge;
 
 @Slf4j
 public class ExtractOrderBooks {
@@ -69,7 +70,7 @@ public class ExtractOrderBooks {
         } catch (RuntimeException re) {
             log.error("Non-retryable error occurred while processing exchange {}.",
                     params.get( "exchange" ));
-            return re;
+            throw re;
         }
         return orderBook;
     }

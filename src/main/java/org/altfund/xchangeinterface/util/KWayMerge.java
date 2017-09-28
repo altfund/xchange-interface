@@ -4,8 +4,10 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.PriorityQueue;
+import java.util.Comparator;
 
 import org.knowm.xchange.dto.marketdata.OrderBook;
+import org.knowm.xchange.dto.trade.LimitOrder;
 
 public class KWayMerge {
 
@@ -18,61 +20,62 @@ public class KWayMerge {
         if (newBooks == null || newBooks.size() == 0)
             return null;
 
-        ArrayList<LimitOrderList> books = null;
+        ArrayList<LimitOrderNode> books = null;
         for (int i = 0; i < books.size(); i++){
-            books.add(new LimitOrderList(newBooks.get(i)));
+            books.add(new LimitOrderNode(newBooks.get(i)));
         }
 
-        PriorityQueue<LimitOrderList> queue = new PriorityQueue<>(books.size(), new KComparator());
+        PriorityQueue<LimitOrderNode> queue = new PriorityQueue<>(books.size(), new KComparator());
         LimitOrder order;
+        LimitOrderNode orderList;
 
         for (int i = 0; i < books.size(); i++) {
-            order = books.next();
-            if (order != null)
-                queue.offer(order);
+            orderList = books.get(i);
+            if (orderList != null)
+                queue.offer(orderList);
         }
 
-        ListNode head = new ListNode(0);
-        ListNode lastNode = head;
+        //ListNode head = new ListNode(0);
+        //ListNode lastNode = head;
 
-        List<LimitOrder> sorted = new LinkedList<LimitOrder>();
-        List<LimitOrder> lastNode = sorted;
+        List<LimitOrder> sorted = new ArrayList<LimitOrder>();
 
-        int i = 0;
         while (!queue.isEmpty()) {
-            List<LimitOrder> node = queue.poll();
-            lastNode.next = node;
+            LimitOrderNode node = queue.poll();
 
-            sorted = queue.poll();
+            sorted.add(node.getCurrent());
 
-            sorted.add(queue.poll());
-
-            if (node.next != null)
-                queue.offer(node.next);
-
-            lastNode = node;
-            i++;
+            if (!node.isEmpty())
+                queue.offer(node.next());
         }
-        return head.next;
+        return sorted;
     }
 
 }
 
-class LimitOrderList{
+class LimitOrderNode{
     int index = 0;
     List<LimitOrder> list;
-    public LimitOrderList(List<LimitOrder> list) {
+    public LimitOrderNode(List<LimitOrder> list) {
         this.list = list;
     }
-    public LimitOrder next() {
+    public LimitOrderNode next() {
         index = index + 1;
+        return this;
+    }
+    public LimitOrder getCurrent(){
         return list.get(index);
+    }
+    public boolean isEmpty() {
+        return list.size() == index + 1;
+    }
+    public int compareTo(LimitOrderNode limitOrderNode) {
+        return getCurrent().compareTo(limitOrderNode.getCurrent());
     }
 }
 
-static class KComparator implements Comparator<List<LimitOrder>> {
-    public int compare(LimitOrder L1, LimitOrder L2) {
+class KComparator implements Comparator<LimitOrderNode> {
+    public int compare(LimitOrderNode L1, LimitOrderNode L2) {
         return L1.compareTo(L2);
     }
-}
 }
