@@ -1,6 +1,7 @@
 package org.altfund.xchangeinterface.xchange.service;
 
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.HashMap;
@@ -20,10 +21,12 @@ import org.knowm.xchange.dto.account.Wallet;
 import org.knowm.xchange.dto.trade.UserTrades;
 import org.knowm.xchange.service.marketdata.MarketDataService;
 import org.knowm.xchange.dto.trade.LimitOrder;
+import org.knowm.xchange.dto.marketdata.OrderBook;
 import org.knowm.xchange.service.trade.params.TradeHistoryParamsAll;
 import org.knowm.xchange.service.trade.params.orders.OpenOrdersParams;
 
 import org.altfund.xchangeinterface.xchange.model.Order;
+import org.altfund.xchangeinterface.xchange.model.MarketByExchanges;
 import org.altfund.xchangeinterface.xchange.model.OrderSpec;
 import org.altfund.xchangeinterface.xchange.model.OrderResponse;
 import org.altfund.xchangeinterface.xchange.model.Exchange;
@@ -32,6 +35,7 @@ import org.altfund.xchangeinterface.xchange.model.TradeHistory;
 import org.altfund.xchangeinterface.xchange.model.TradeHistoryParams;
 import org.altfund.xchangeinterface.xchange.model.OpenOrder;
 import org.altfund.xchangeinterface.util.JsonHelper;
+import org.altfund.xchangeinterface.util.KWayMerge;
 import org.altfund.xchangeinterface.xchange.service.util.ExtractCurrencies;
 import org.altfund.xchangeinterface.xchange.service.util.ExtractExchangeTickers;
 import org.altfund.xchangeinterface.xchange.service.util.ExtractOrderBooks;
@@ -52,17 +56,20 @@ public class XChangeServiceImpl implements XChangeService {
 
     private final XChangeFactory xChangeFactory;
     private final JsonHelper jh;
+    private final KWayMerge kWayMerge;
     private final LimitOrderPlacer limitOrderPlacer;
     private final DozerBeanMapper dozerBeanMapper;
 
     public XChangeServiceImpl(XChangeFactory xChangeFactory,
                               JsonHelper jh,
                               LimitOrderPlacer limitOrderPlacer,
-                              DozerBeanMapper dozerBeanMapper) {
+                              DozerBeanMapper dozerBeanMapper,
+                              KWayMerge kWayMerge) {
         this.xChangeFactory = xChangeFactory;
         this.jh = jh;
         this.limitOrderPlacer = limitOrderPlacer;
         this.dozerBeanMapper = dozerBeanMapper;
+        this.kWayMerge = kWayMerge;
     }
 
     @Override
@@ -152,6 +159,52 @@ public class XChangeServiceImpl implements XChangeService {
         }
         catch (IOException ex) {
             // import java.time.LocalDateTime;
+            errorMap.put("ERROR", ex.getMessage());
+            return errorMap;
+        }
+        return orderBookMap;
+    }
+
+    @Override
+    public ObjectNode getAggregateOrderBooks(MarketByExchanges marketByExchanges) {
+        List<OrderBook> books = null;
+        MarketDataService marketDataService = null;
+        List<String> exchanges = marketByExchanges.getExchanges();
+        ArrayList<List<LimitOrder>> asks = new ArrayList<List<LimitOrder>>();
+        ArrayList<List<LimitOrder>> bids = new ArrayList<List<LimitOrder>>();
+        List<LimitOrder> aggregatedAsks = new ArrayList<LimitOrder>();
+        List<LimitOrder> aggregatedBids = new ArrayList<LimitOrder>();
+        OrderBook ob = null;
+        ObjectNode orderBookMap = jh.getObjectNode();
+        ObjectNode errorMap = jh.getObjectNode();
+
+        CurrencyPair cp = new CurrencyPair(
+                marketByExchanges.getQuoteCurrency(),
+                marketByExchanges.getBaseCurrency());
+
+        try {
+            for (int i = 0; i < exchanges.size(); i++) {
+                marketDataService = xChangeFactory.getMarketDataService(exchanges.get(i));
+                ob = ExtractOrderBooks.raw(marketDataService, cp, exchanges.get(i));
+
+                asks.add(ob.getAsks());
+                bids.add(ob.getBids());
+            }
+            aggregatedAsks = kWayMerge.mergeKLists(asks);
+            aggregatedBids = kWayMerge.mergeKLists(bids);
+            orderBookMap.put("ASKS", jh.getObjectMapper().writeValueAsString(aggregatedAsks));
+            orderBookMap.put("BIDS", jh.getObjectMapper().writeValueAsString(aggregatedBids));
+            //params for this method are needed because it has "base_currency" and "quote_currency"
+        }
+        catch (XChangeServiceException ex) {
+            // import java.time.LocalDateTime;
+            //log.error("xchangeservice exception SHOULD THROW TO CALLER \n{}", ex.getStackTrace());
+            errorMap.put("ERROR", ex.getMessage());
+            return errorMap;
+        }
+        catch (Exception ex) {
+            // import java.time.LocalDateTime;
+            //log.error("xchangeservice exception SHOULD THROW TO CALLER \n{}", ex.getStackTrace());
             errorMap.put("ERROR", ex.getMessage());
             return errorMap;
         }

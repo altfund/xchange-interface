@@ -12,6 +12,7 @@ import org.springframework.context.annotation.Configuration;
 import org.altfund.xchangeinterface.restApi.currency.CurrencyController;
 import org.altfund.xchangeinterface.api.balance.BalanceEndpoint;
 import org.altfund.xchangeinterface.util.JsonHelper;
+import org.altfund.xchangeinterface.util.KWayMerge;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.altfund.xchangeinterface.xchange.service.MessageEncryption;
@@ -44,13 +45,18 @@ public class XChangeServiceConfig {
   }
 
   @Bean
+  public KWayMerge kWayMerge() {
+    return new KWayMerge();
+  }
+
+  @Bean
   public XChangeFactory xChangeFactory() {
     return new XChangeFactoryImpl();
   }
 
   @Bean
-  public XChangeService xChangeService(XChangeFactory xChangeFactory, JsonHelper jh, LimitOrderPlacer limitOrderPlacer, DozerBeanMapper dozerBeanMapper) {
-    return new XChangeServiceImpl(xChangeFactory, jh, limitOrderPlacer, dozerBeanMapper);
+  public XChangeService xChangeService(XChangeFactory xChangeFactory, JsonHelper jh, LimitOrderPlacer limitOrderPlacer, DozerBeanMapper dozerBeanMapper, KWayMerge kWayMerge) {
+    return new XChangeServiceImpl(xChangeFactory, jh, limitOrderPlacer, dozerBeanMapper, kWayMerge);
   }
 
   @Bean

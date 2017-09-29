@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Map;
 import org.knowm.xchange.currency.CurrencyPair;
 import org.knowm.xchange.dto.marketdata.OrderBook;
+import org.altfund.xchangeinterface.xchange.model.MarketByExchanges;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.knowm.xchange.service.marketdata.MarketDataService;
 import org.altfund.xchangeinterface.xchange.service.exceptions.XChangeServiceException;
@@ -48,18 +49,14 @@ public class ExtractOrderBooks {
         return json;
     }
 
-    public static OrderBook raw(
+    public static OrderBook raw (
                         MarketDataService marketDataService,
-                        Map<String, String> params)  throws Exception {
+                        CurrencyPair cp,
+                        String exchange)  throws Exception {
         OrderBook orderBook = null;
-        CurrencyPair cp = null;
 
         try {
-            cp = new CurrencyPair(
-                    params.get("quote_currency"),
-                    params.get("base_currency")
-                    );
-            log.debug("currency pair submitted to order book {}.", cp.toString());
+            log.debug("{} currency pair submitted to order book {}.", exchange, cp.toString());
 
             try {
                 orderBook = getOrderBook(marketDataService, cp);
@@ -68,8 +65,7 @@ public class ExtractOrderBooks {
             }
 
         } catch (RuntimeException re) {
-            log.error("Non-retryable error occurred while processing exchange {}.",
-                    params.get( "exchange" ));
+            log.error("Non-retryable error occurred while processing exchange {}.", exchange);
             throw re;
         }
         return orderBook;

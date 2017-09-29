@@ -6,6 +6,7 @@ import org.altfund.xchangeinterface.xchange.model.Exchange;
 import org.altfund.xchangeinterface.xchange.model.OrderResponse;
 import org.altfund.xchangeinterface.xchange.model.TradeHistory;
 import org.altfund.xchangeinterface.xchange.model.OpenOrder;
+import org.altfund.xchangeinterface.xchange.model.MarketByExchanges;
 import org.altfund.xchangeinterface.xchange.service.exceptions.XChangeServiceException;
 
 import org.knowm.xchange.currency.Currency;
@@ -28,4 +29,5 @@ public interface XChangeService {
     boolean cancelLimitOrder(Order order) throws Exception;
     String getTradeHistory(TradeHistory tradeHistory) throws Exception;
     String getOpenOrders(ExchangeCredentials exchangeCredentials) throws Exception;
+    ObjectNode getAggregateOrderBooks(MarketByExchanges marketByExchanges);
 }
