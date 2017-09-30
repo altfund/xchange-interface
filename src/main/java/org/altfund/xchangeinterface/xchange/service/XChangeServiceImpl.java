@@ -183,7 +183,9 @@ public class XChangeServiceImpl implements XChangeService {
                 marketByExchanges.getBaseCurrency());
 
         try {
+            log.debug("Begin extract MarketDataService(s)");
             for (int i = 0; i < exchanges.size(); i++) {
+                log.debug("Get MarketDataService for {}", exchanges.get(i));
                 marketDataService = xChangeFactory.getMarketDataService(exchanges.get(i));
                 ob = ExtractOrderBooks.raw(marketDataService, cp, exchanges.get(i));
 
@@ -198,13 +200,15 @@ public class XChangeServiceImpl implements XChangeService {
         }
         catch (XChangeServiceException ex) {
             // import java.time.LocalDateTime;
-            //log.error("xchangeservice exception SHOULD THROW TO CALLER \n{}", ex.getStackTrace());
+            //log.error("xchangeservice excepti)on SHOULD THROW TO CALLER \n{}", ex.getStackTrace());
+            log.error("{}", ex.getStackTrace());
             errorMap.put("ERROR", ex.getMessage());
             return errorMap;
         }
         catch (Exception ex) {
             // import java.time.LocalDateTime;
             //log.error("xchangeservice exception SHOULD THROW TO CALLER \n{}", ex.getStackTrace());
+            log.error("{}", ex.getStackTrace());
             errorMap.put("ERROR", ex.getMessage());
             return errorMap;
         }

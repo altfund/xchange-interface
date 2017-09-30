@@ -60,7 +60,9 @@ public class ExtractOrderBooks {
 
             try {
                 orderBook = getOrderBook(marketDataService, cp);
+                log.debug("Got order book for exchange {} market {}.", exchange, cp.toString());
             } catch (Exception e) {
+                log.debug("Failed to get order book for exchange {} market {}.", exchange, cp.toString());
                 throw e;
             }
 

@@ -5,10 +5,12 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.PriorityQueue;
 import java.util.Comparator;
+import lombok.extern.slf4j.Slf4j;
 
 import org.knowm.xchange.dto.marketdata.OrderBook;
 import org.knowm.xchange.dto.trade.LimitOrder;
 
+@Slf4j
 public class KWayMerge {
 
 
@@ -17,12 +19,15 @@ public class KWayMerge {
 
     //TODO don't need ArrayList the whole time, normal list would suffice
     public List<LimitOrder> mergeKLists(ArrayList<List<LimitOrder>> newBooks) {
-        if (newBooks == null || newBooks.size() == 0)
+        if (newBooks == null || newBooks.size() == 0){
+            log.debug("new books null or of size 0");
             return null;
+        }
 
-        ArrayList<LimitOrderNode> books = null;
-        for (int i = 0; i < books.size(); i++){
+        ArrayList<LimitOrderNode> books = new ArrayList<LimitOrderNode>();
+        for (int i = 0; i < newBooks.size(); i++){
             books.add(new LimitOrderNode(newBooks.get(i)));
+            log.debug("Adding exchange: {}", newBooks.get(i));
         }
 
         PriorityQueue<LimitOrderNode> queue = new PriorityQueue<>(books.size(), new KComparator());
