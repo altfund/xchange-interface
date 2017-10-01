@@ -28,8 +28,8 @@ public class ExtractOrderBooks {
         try {
             innerJson = jh.getObjectNode();
             cp = new CurrencyPair(
-                    params.get("quote_currency"),
-                    params.get("base_currency")
+                    params.get("base_currency"),
+                    params.get("quote_currency")
                     );
             log.debug("currency pair submitted to order book {}.", cp.toString());
 

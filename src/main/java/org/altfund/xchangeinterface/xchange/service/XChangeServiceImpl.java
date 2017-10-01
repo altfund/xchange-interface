@@ -181,8 +181,8 @@ public class XChangeServiceImpl implements XChangeService {
         ObjectNode errorMap = jh.getObjectNode();
 
         CurrencyPair cp = new CurrencyPair(
-                marketByExchanges.getQuoteCurrency(),
-                marketByExchanges.getBaseCurrency());
+                marketByExchanges.getBaseCurrency(),
+                marketByExchanges.getQuoteCurrency());
 
         try {
             log.debug("Begin extract MarketDataService(s)");
@@ -476,6 +476,25 @@ public class XChangeServiceImpl implements XChangeService {
             log.error("Non-retyable error {}: " + re, re.getMessage());
         }
         */
+        return response;
+    }
+
+    @Override
+    public String getAvailableMarkets(List<CurrenciesOnExchange> currenciesOnExchanges) throws Exception {
+        String response = "";
+        ExchangeMetaData metaData = null;
+        ObjectNode marketsByExchange = jh.getObjectNode();
+        try {
+            for (int i = 0; i < currenciesOnExchanges.size(); i++) {
+                metaData = xChangeFactory.getExchangeMetaData(currenciesOnExchanges.get(i).getExchange());
+                response = metaData.getCurrencyPairs().toString();
+                marketsByExchange.put(currenciesOnExchanges.get(i).getExchange(), response);
+            }
+        }
+        catch (Exception e) {
+            throw e;
+        }
+        response = jh.getObjectMapper().writeValueAsString(marketByExchanges);
         return response;
     }
 }
