@@ -28,6 +28,7 @@ import org.knowm.xchange.service.trade.params.orders.OpenOrdersParams;
 import org.altfund.xchangeinterface.util.JsonHelper;
 import org.altfund.xchangeinterface.util.KWayMerge;
 import org.altfund.xchangeinterface.xchange.model.Exchange;
+import org.altfund.xchangeinterface.xchange.model.CurrenciesOnExchange;
 import org.altfund.xchangeinterface.xchange.model.ExchangeCredentials;
 import org.altfund.xchangeinterface.xchange.model.LimitOrderExchange;
 import org.altfund.xchangeinterface.xchange.model.MarketByExchanges;
@@ -494,7 +495,7 @@ public class XChangeServiceImpl implements XChangeService {
         catch (Exception e) {
             throw e;
         }
-        response = jh.getObjectMapper().writeValueAsString(marketByExchanges);
+        response = jh.getObjectMapper().writeValueAsString(marketsByExchange);
         return response;
     }
 }

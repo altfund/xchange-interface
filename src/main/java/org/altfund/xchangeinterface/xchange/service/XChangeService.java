@@ -15,6 +15,7 @@ import org.knowm.xchange.dto.meta.CurrencyMetaData;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.util.Map;
+import java.util.List;
 
 /**
  * altfund
