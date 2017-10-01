@@ -280,6 +280,7 @@ public class XChangeFactoryImpl implements XChangeFactory {
     private boolean setProperties(String exchangeName) {
 
         log.debug("requested  " + exchangeName);
+        try {
         for (Exchange exchange : Exchange.values()) {
             if (exchange.getExchangeClassName().contains(exchangeName)) {
                 ExchangeSpecification exchangeSpecification = createExchangeSpecification(exchange);
@@ -299,6 +300,11 @@ public class XChangeFactoryImpl implements XChangeFactory {
                     return false;
                 }
             }
+        }
+        }
+        catch (Exception ex) {
+            log.error("Couldn't create XChange {},\n{}", exchangeName, ex.getStackTrace());
+            return false;
         }
         return false;
     }
