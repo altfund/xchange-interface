@@ -25,23 +25,23 @@ import org.knowm.xchange.dto.marketdata.OrderBook;
 import org.knowm.xchange.service.trade.params.TradeHistoryParamsAll;
 import org.knowm.xchange.service.trade.params.orders.OpenOrdersParams;
 
-import org.altfund.xchangeinterface.xchange.model.Order;
-import org.altfund.xchangeinterface.xchange.model.MarketByExchanges;
-import org.altfund.xchangeinterface.xchange.model.OrderSpec;
-import org.altfund.xchangeinterface.xchange.model.OrderResponse;
-import org.altfund.xchangeinterface.xchange.model.Exchange;
-import org.altfund.xchangeinterface.xchange.model.ExchangeCredentials;
-import org.altfund.xchangeinterface.xchange.model.TradeHistory;
-import org.altfund.xchangeinterface.xchange.model.TradeHistoryParams;
-import org.altfund.xchangeinterface.xchange.model.OpenOrder;
 import org.altfund.xchangeinterface.util.JsonHelper;
 import org.altfund.xchangeinterface.util.KWayMerge;
+import org.altfund.xchangeinterface.xchange.model.Exchange;
+import org.altfund.xchangeinterface.xchange.model.ExchangeCredentials;
+import org.altfund.xchangeinterface.xchange.model.LimitOrderExchange;
+import org.altfund.xchangeinterface.xchange.model.MarketByExchanges;
+import org.altfund.xchangeinterface.xchange.model.OpenOrder;
+import org.altfund.xchangeinterface.xchange.model.OrderSpec;
+import org.altfund.xchangeinterface.xchange.model.Order;
+import org.altfund.xchangeinterface.xchange.model.OrderResponse;
+import org.altfund.xchangeinterface.xchange.model.TradeHistory;
+import org.altfund.xchangeinterface.xchange.model.TradeHistoryParams;
 import org.altfund.xchangeinterface.xchange.service.util.ExtractCurrencies;
 import org.altfund.xchangeinterface.xchange.service.util.ExtractExchangeTickers;
 import org.altfund.xchangeinterface.xchange.service.util.ExtractOrderBooks;
 import org.altfund.xchangeinterface.xchange.service.util.ExtractTradeFees;
 import org.altfund.xchangeinterface.xchange.service.util.ExtractBalances;
-//import org.altfund.xchangeinterface.xchange.service.util.ExtractUserTrades;
 import org.altfund.xchangeinterface.xchange.service.util.LimitOrderPlacer;
 
 import java.io.IOException;
@@ -171,9 +171,11 @@ public class XChangeServiceImpl implements XChangeService {
         MarketDataService marketDataService = null;
         List<String> exchanges = marketByExchanges.getExchanges();
         ArrayList<List<LimitOrder>> asks = new ArrayList<List<LimitOrder>>();
+        ArrayList<String> askExchanges = new ArrayList<String>();
         ArrayList<List<LimitOrder>> bids = new ArrayList<List<LimitOrder>>();
-        List<LimitOrder> aggregatedAsks = new ArrayList<LimitOrder>();
-        List<LimitOrder> aggregatedBids = new ArrayList<LimitOrder>();
+        ArrayList<String> bidExchanges = new ArrayList<String>();
+        List<LimitOrderExchange> aggregatedAsks = new ArrayList<LimitOrderExchange>();
+        List<LimitOrderExchange> aggregatedBids = new ArrayList<LimitOrderExchange>();
         OrderBook ob = null;
         ObjectNode orderBookMap = jh.getObjectNode();
         ObjectNode errorMap = jh.getObjectNode();
@@ -190,10 +192,12 @@ public class XChangeServiceImpl implements XChangeService {
                 ob = ExtractOrderBooks.raw(marketDataService, cp, exchanges.get(i));
 
                 asks.add(ob.getAsks());
+                askExchanges.add(exchanges.get(i));
                 bids.add(ob.getBids());
+                bidExchanges.add(exchanges.get(i));
             }
-            aggregatedAsks = kWayMerge.mergeKLists(asks);
-            aggregatedBids = kWayMerge.mergeKLists(bids);
+            aggregatedAsks = kWayMerge.mergeKLists(asks, askExchanges);
+            aggregatedBids = kWayMerge.mergeKLists(bids, bidExchanges);
             orderBookMap.put("ASKS", jh.getObjectMapper().writeValueAsString(aggregatedAsks));
             orderBookMap.put("BIDS", jh.getObjectMapper().writeValueAsString(aggregatedBids));
             //params for this method are needed because it has "base_currency" and "quote_currency"
@@ -214,34 +218,6 @@ public class XChangeServiceImpl implements XChangeService {
         }
         return orderBookMap;
     }
-
-    /*
-    public ObjectNode getAggregatedOrderBooks(Map<String, String> params) {
-        MarketDataService  marketDataService;
-        OrderBook orderBook = null;
-        ObjectNode errorMap = jh.getObjectNode();
-
-        try {
-            //xChangeFactory.setProperties(params.get("exchange"));
-            //marketDataService = Optional.ofNullable(xChangeFactory.getMarketDataService(params.get( "exchange" )));
-            marketDataService = xChangeFactory.getMarketDataService(params.get("exchange"));
-
-            //params for this method are needed because it has "base_currency" and "quote_currency"
-            orderBookMap =  ExtractOrderBooks.raw(marketDataService, params, jh);
-        }
-        catch (XChangeServiceException ex) {
-            // import java.time.LocalDateTime;
-            errorMap.put("ERROR", ex.getMessage());
-            return errorMap;
-        }
-        catch (IOException ex) {
-            // import java.time.LocalDateTime;
-            errorMap.put("ERROR", ex.getMessage());
-            return errorMap;
-        }
-        return orderBookMap;
-    }
-    */
 
     @Override
     public ObjectNode getExchangeTradeFees(Map<String, String> params) {

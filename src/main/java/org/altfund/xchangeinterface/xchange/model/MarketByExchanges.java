@@ -11,6 +11,7 @@ public class MarketByExchanges {
 
   @JsonProperty("base_currency")
   private String baseCurrency;
+
   @JsonProperty("quote_currency")
   private String quoteCurrency;
 

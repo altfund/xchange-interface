@@ -5,6 +5,19 @@
 
 # Currently supported endpoints
 
+## /aggreagateorderbooks *encrypted method*
+     - curl -X POST --data '{"base_currency": "BTC","quote_currency": "ETH", "exchanges": ["bitfinex","poloniex"]}' -H "Content-type:application/json" http://localhost:9000/aggregateorderbooks
+     - List<org.knowm.xchange.dto.trade.LimitOrder>, http://knowm.org/javadocs/xchange/org/knowm/xchange/dto/trade/LimitOrder.html 
+     - Actual List is of a special type LimitOrderExchange which has the added exchange property so we know to which exchange the limit order belongs.
+     - accepts json in paramter encrypted_data:
+     - returns aggregate order book (asks/bids) of all the exchanges provided, for the given currency pair.
+ ```
+     - encrypted_data = {
+                        base_currency: "<base_currency>",
+                        quote_currency: "<quote_currency>",
+                        exchanges: "[<exchange>,<exchange>, ... ]",
+       }
+```
 ## /openorders *encrypted method*
      - /openorders?iv=XYZ&encrypted_data=ABC
      - List<org.knowm.xchange.dto.trade.LimitOrder>, http://knowm.org/javadocs/xchange/org/knowm/xchange/dto/trade/LimitOrder.html 

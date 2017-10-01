@@ -7,8 +7,11 @@ import java.util.PriorityQueue;
 import java.util.Comparator;
 import lombok.extern.slf4j.Slf4j;
 
+
 import org.knowm.xchange.dto.marketdata.OrderBook;
 import org.knowm.xchange.dto.trade.LimitOrder;
+
+import org.altfund.xchangeinterface.xchange.model.LimitOrderExchange;
 
 @Slf4j
 public class KWayMerge {
@@ -18,7 +21,7 @@ public class KWayMerge {
     }
 
     //TODO don't need ArrayList the whole time, normal list would suffice
-    public List<LimitOrder> mergeKLists(ArrayList<List<LimitOrder>> newBooks) {
+    public List<LimitOrderExchange> mergeKLists(ArrayList<List<LimitOrder>> newBooks, ArrayList<String> exchanges) {
         if (newBooks == null || newBooks.size() == 0){
             log.debug("new books null or of size 0");
             return null;
@@ -26,7 +29,7 @@ public class KWayMerge {
 
         ArrayList<LimitOrderNode> books = new ArrayList<LimitOrderNode>();
         for (int i = 0; i < newBooks.size(); i++){
-            books.add(new LimitOrderNode(newBooks.get(i)));
+            books.add(new LimitOrderNode(newBooks.get(i), exchanges.get(i)));
             log.debug("Adding exchange: {}", newBooks.get(i));
         }
 
@@ -40,15 +43,18 @@ public class KWayMerge {
                 queue.offer(orderList);
         }
 
-        //ListNode head = new ListNode(0);
-        //ListNode lastNode = head;
-
-        List<LimitOrder> sorted = new ArrayList<LimitOrder>();
+        List<LimitOrderExchange> sorted = new ArrayList<LimitOrderExchange>();
+        LimitOrder lo = null;
+        String exchange = "";
 
         while (!queue.isEmpty()) {
             LimitOrderNode node = queue.poll();
 
-            sorted.add(node.getCurrent());
+            lo = node.getCurrent();
+            exchange = node.getExchange();
+            LimitOrderExchange loe = new LimitOrderExchange(exchange, lo);
+
+            sorted.add(loe);
 
             if (!node.isEmpty())
                 queue.offer(node.next());
@@ -61,12 +67,17 @@ public class KWayMerge {
 class LimitOrderNode{
     int index = 0;
     List<LimitOrder> list;
-    public LimitOrderNode(List<LimitOrder> list) {
+    String exchange;
+    public LimitOrderNode(List<LimitOrder> list, String exchange) {
         this.list = list;
+        this.exchange = exchange;
     }
     public LimitOrderNode next() {
         index = index + 1;
         return this;
+    }
+    public String getExchange(){
+        return exchange;
     }
     public LimitOrder getCurrent(){
         return list.get(index);
