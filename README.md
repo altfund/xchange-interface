@@ -5,6 +5,10 @@
 
 # Currently supported endpoints
 
+## /interexchangearbitrage *encrypted method*
+    - takes a list of orders. Same scheme for each order as method /limitorder
+    - submits two limit orders to try and take advantage or an arbitrage opportunity
+
 ## /aggreagateorderbooks *encrypted method*
      - invoke availablemarkets -e gdax,poloniex -c ETH/BTC/LTC,ETH/BTC/LTC
      - inputs: specify the exchanges and the corresponding currencies you can trade on those exchanges
