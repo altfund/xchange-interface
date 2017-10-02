@@ -2,6 +2,7 @@ package org.altfund.xchangeinterface.xchange.model;
 
 import lombok.extern.slf4j.Slf4j;
 import lombok.Getter;
+import lombok.Setter;
 import java.util.Optional;
 import java.io.StringWriter;
 import java.io.PrintWriter;
@@ -26,6 +27,7 @@ import org.altfund.xchangeinterface.xchange.model.OrderStatusTypes;
 //}
 
 @Getter
+@Setter
 @Slf4j
 public class OrderStatus {
     public OrderStatusTypes orderStatusType;
@@ -99,7 +101,13 @@ public class OrderStatus {
     public OrderStatusTypes getOrderStatusType() {
         return this.orderStatusType;
     }
+    public void setOrderStatusType(OrderStatusTypes orderStatusType) {
+        this.orderStatusType = orderStatusType;
+    }
     public String getOrderStatusPhrase() {
         return this.orderStatusPhrase;
+    }
+    public void setOrderStatusPhrase(String phrase) {
+        this.orderStatusPhrase = phrase;
     }
 }

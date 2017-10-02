@@ -23,6 +23,10 @@ import org.knowm.xchange.dto.trade.UserTrades;
 import org.knowm.xchange.service.marketdata.MarketDataService;
 import org.knowm.xchange.dto.trade.LimitOrder;
 import org.knowm.xchange.dto.marketdata.OrderBook;
+import org.altfund.xchangeinterface.xchange.model.OrderStatusTypes;
+import static org.altfund.xchangeinterface.xchange.model.OrderStatusTypes.PLACED;
+import static org.altfund.xchangeinterface.xchange.model.OrderStatusTypes.CANCELED;
+import static org.altfund.xchangeinterface.xchange.model.OrderStatusTypes.CANCEL_FAILED;
 import org.knowm.xchange.service.trade.params.TradeHistoryParamsAll;
 import org.knowm.xchange.service.trade.params.orders.OpenOrdersParams;
 
@@ -63,10 +67,10 @@ public class XChangeServiceImpl implements XChangeService {
     private final DozerBeanMapper dozerBeanMapper;
 
     public XChangeServiceImpl(XChangeFactory xChangeFactory,
-                              JsonHelper jh,
-                              LimitOrderPlacer limitOrderPlacer,
-                              DozerBeanMapper dozerBeanMapper,
-                              KWayMerge kWayMerge) {
+            JsonHelper jh,
+            LimitOrderPlacer limitOrderPlacer,
+            DozerBeanMapper dozerBeanMapper,
+            KWayMerge kWayMerge) {
         this.xChangeFactory = xChangeFactory;
         this.jh = jh;
         this.limitOrderPlacer = limitOrderPlacer;
@@ -315,17 +319,60 @@ public class XChangeServiceImpl implements XChangeService {
             throw e;
         }
         /*
-        catch (IOException e) {
-            log.error("XChangeServiceException {}: " + e, e.getMessage());
-        }
-        catch (XChangeServiceException e) {
-            log.error("XChangeServiceException {}: " + e, e.getMessage());
-        }
-        catch (RuntimeException re) {
-            log.error("Non-retyable error {}: " + re, re.getMessage());
-        }
-        */
+           catch (IOException e) {
+           log.error("XChangeServiceException {}: " + e, e.getMessage());
+           }
+           catch (XChangeServiceException e) {
+           log.error("XChangeServiceException {}: " + e, e.getMessage());
+           }
+           catch (RuntimeException re) {
+           log.error("Non-retyable error {}: " + re, re.getMessage());
+           }
+           */
         return orderResponse;
+    }
+
+    public String interExchangeArbitrage(List<Order> orders) throws Exception {
+        List<OrderResponse> orderResponses = new ArrayList<OrderResponse>();
+        OrderResponse prevOrderResponse = null;
+        OrderResponse thisOrderResponse = null;
+        Order thisOrder = null;
+        Order prevOrder = null;
+        boolean isCanceled = false;
+        String response = "";
+
+
+        //TODO does not fully support more than 2 orders beause it doesn't cancel the
+        //first N orders, only the previous one.
+        try {
+            for (int i = 0; i < orders.size(); i++) {
+                if ((prevOrderResponse != null) && !(prevOrderResponse.getOrderStatus().hasStatus(PLACED))) {
+                    prevOrder.setOrderId(prevOrderResponse.getOrderId());
+                    isCanceled = cancelLimitOrder(prevOrder);
+                    OrderStatusTypes prevOrderStatusType = prevOrderResponse.getOrderStatus().getOrderStatusType();
+                    String prevOrderStatusPhrase =  prevOrderResponse.getOrderStatus().getOrderStatusPhrase();
+                    if (isCanceled) {
+                        prevOrderResponse.getOrderStatus().setOrderStatusType(CANCELED);
+                        prevOrderResponse.getOrderStatus().setOrderStatusPhrase(prevOrderStatusType.toString() + ", " + prevOrderStatusPhrase);
+                    }
+                    else {
+                        prevOrderResponse.getOrderStatus().setOrderStatusType(CANCEL_FAILED);
+                        prevOrderResponse.getOrderStatus().setOrderStatusPhrase(prevOrderStatusType.toString() + ", " + prevOrderStatusPhrase);
+                    }
+                    break;
+                }
+                thisOrder = orders.get(i);
+                thisOrderResponse = placeLimitOrder(thisOrder);
+                orderResponses.add(thisOrderResponse);
+                prevOrderResponse = thisOrderResponse;
+                prevOrder = thisOrder;
+            }
+        }
+        catch (Exception e) {
+            throw e;
+        }
+        response = jh.getObjectMapper().writeValueAsString(orderResponses);
+        return response;
     }
 
     @Override
@@ -350,34 +397,34 @@ public class XChangeServiceImpl implements XChangeService {
         try {
             tradeService = xChangeFactory.getTradeService(exchangeCredentials);
             currencyPair = new CurrencyPair(
-                order.getOrderSpec().getBaseCurrency().name(),
-                order.getOrderSpec().getQuoteCurrency().name()
-            );
+                    order.getOrderSpec().getBaseCurrency().name(),
+                    order.getOrderSpec().getQuoteCurrency().name()
+                    );
 
             //scale = xChangeFactory.getExchangeScale(order.getExchangeCredentials(), currencyPair);
 
             orderResponse = limitOrderPlacer.placeOrder(order, tradeService, currencyPair, scale, jh);
             /*
-            if (orderResponse.isRetryable()) {
-                //TODO is using same orderResponse wrong?
-                orderResponse = limitOrderPlacer.placeOrder(order, tradeService, currencyPair, scale, jh);
-            }
-            */
+               if (orderResponse.isRetryable()) {
+            //TODO is using same orderResponse wrong?
+            orderResponse = limitOrderPlacer.placeOrder(order, tradeService, currencyPair, scale, jh);
+               }
+               */
         }
         /*
-        catch (IOException e) {
-            log.error("XChangeServiceException {}: " + e, e.getMessage());
-        }
-        catch (XChangeServiceException e) {
-            log.error("XChangeServiceException {}: " + e, e.getMessage());
-        }
-        catch (NoSuchElementException e) {
-            log.error("NoSuchElementException {}: " + e, e.getMessage());
-        }
-        catch (RuntimeException re) {
-            log.error("Non-retyable error {}: " + re, re.getMessage());
-        }
-        */
+           catch (IOException e) {
+           log.error("XChangeServiceException {}: " + e, e.getMessage());
+           }
+           catch (XChangeServiceException e) {
+           log.error("XChangeServiceException {}: " + e, e.getMessage());
+           }
+           catch (NoSuchElementException e) {
+           log.error("NoSuchElementException {}: " + e, e.getMessage());
+           }
+           catch (RuntimeException re) {
+           log.error("Non-retyable error {}: " + re, re.getMessage());
+           }
+           */
         catch (Exception e){
             throw e;
         }
@@ -440,20 +487,20 @@ public class XChangeServiceImpl implements XChangeService {
             knowmOpenOrderParms = tradeService.createOpenOrdersParams();
 
             /*
-            CurrencyPair cp = new CurrencyPair(
-                    openOrder.getOpenOrderParams().getBaseCurrency(),
-                    openOrder.getOpenOrderParams().getQuoteCurrency()
-                    );
-            */
+               CurrencyPair cp = new CurrencyPair(
+               openOrder.getOpenOrderParams().getBaseCurrency(),
+               openOrder.getOpenOrderParams().getQuoteCurrency()
+               );
+               */
             //knowmOpenOrderParms.setCurrencyPair(cp);
 
 
             /*
-            knowmOpenOrderParms = dozerBeanMapper.map(
-                                        openOrder.getOpenOrderParams(),
-                                        org.knowm.xchange.service.trade.params.orders.OpenOrdersParams.class);
-            openOrders = tradeService.getOpenOrders(knowmOpenOrderParms).getOpenOrders();
-            */
+               knowmOpenOrderParms = dozerBeanMapper.map(
+               openOrder.getOpenOrderParams(),
+               org.knowm.xchange.service.trade.params.orders.OpenOrdersParams.class);
+               openOrders = tradeService.getOpenOrders(knowmOpenOrderParms).getOpenOrders();
+               */
 
             //openOrders = tradeService.getOpenOrders(knowmOpenOrderParms).getOpenOrders();
             response = tradeService.getOpenOrders(knowmOpenOrderParms).toString();
@@ -469,13 +516,13 @@ public class XChangeServiceImpl implements XChangeService {
         /*
         //TODO return errors as json
         catch (IOException e) {
-            log.error("XChangeServiceException {}: " + e, e.getMessage());
+        log.error("XChangeServiceException {}: " + e, e.getMessage());
         }
         catch (XChangeServiceException e) {
-            log.error("XChangeServiceException {}: " + e, e.getMessage());
+        log.error("XChangeServiceException {}: " + e, e.getMessage());
         }
         catch (RuntimeException re) {
-            log.error("Non-retyable error {}: " + re, re.getMessage());
+        log.error("Non-retyable error {}: " + re, re.getMessage());
         }
         */
         return response;
@@ -517,7 +564,7 @@ public class XChangeServiceImpl implements XChangeService {
                                 exchanges = new ArrayList<String>();
                                 exchanges.add(currenciesOnExchanges.get(i).getExchange());
                                 marketByExchanges.put(cp,
-                                                      exchanges);
+                                        exchanges);
                             } else {
                                 exchanges.add(currenciesOnExchanges.get(i).getExchange());
                             }
