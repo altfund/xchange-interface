@@ -14,6 +14,7 @@ import org.dozer.DozerBeanMapper;
 
 import org.knowm.xchange.service.trade.TradeService;
 import org.knowm.xchange.dto.meta.ExchangeMetaData;
+import org.knowm.xchange.dto.meta.CurrencyPairMetaData;
 import org.knowm.xchange.currency.CurrencyPair;
 import org.knowm.xchange.service.account.AccountService;
 import org.knowm.xchange.dto.account.AccountInfo;
@@ -484,18 +485,53 @@ public class XChangeServiceImpl implements XChangeService {
     public String getAvailableMarkets(List<CurrenciesOnExchange> currenciesOnExchanges) throws Exception {
         String response = "";
         ExchangeMetaData metaData = null;
-        ObjectNode marketsByExchange = jh.getObjectNode();
+        Map<CurrencyPair, List<String>> marketByExchanges = new HashMap<CurrencyPair, List<String>>();
+        Map<CurrencyPair, CurrencyPairMetaData> cpMetaData = null;
+        List<String> currencies = null;
+        CurrencyPair cp = null;
+        CurrencyPairMetaData cpmd = null;
+        List<String> exchanges = null;
         try {
             for (int i = 0; i < currenciesOnExchanges.size(); i++) {
                 metaData = xChangeFactory.getExchangeMetaData(currenciesOnExchanges.get(i).getExchange());
-                response = metaData.getCurrencyPairs().toString();
-                marketsByExchange.put(currenciesOnExchanges.get(i).getExchange(), response);
+                cpMetaData = metaData.getCurrencyPairs();
+                currencies = currenciesOnExchanges.get(i).getCurrencies();
+                int numCurrencies = currencies.size();
+                for (int j = 0; j < numCurrencies; j++) {
+                    for (int k = 0; k < numCurrencies -1; k++) {
+                        if (j == k) {
+                            k += 1;
+                            if (k == numCurrencies) {
+                                break;
+                            }
+                        }
+
+                        cp = new CurrencyPair(
+                                currencies.get(j),
+                                currencies.get(k));
+
+                        cpmd = cpMetaData.get(cp);
+                        if (cpmd != null) {
+                            exchanges = marketByExchanges.get(cp);
+                            if (exchanges == null) {
+                                exchanges = new ArrayList<String>();
+                                exchanges.add(currenciesOnExchanges.get(i).getExchange());
+                                marketByExchanges.put(cp,
+                                                      exchanges);
+                            } else {
+                                exchanges.add(currenciesOnExchanges.get(i).getExchange());
+                            }
+                        }
+                    }
+                }
+                //response = metaData.getCurrencyPairs().toString();
+                //marketsByExchange.put(currenciesOnExchanges.get(i).getExchange(), response);
             }
         }
         catch (Exception e) {
             throw e;
         }
-        response = jh.getObjectMapper().writeValueAsString(marketsByExchange);
+        response = jh.getObjectMapper().writeValueAsString(marketByExchanges);
         return response;
     }
 }

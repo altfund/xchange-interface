@@ -6,6 +6,17 @@
 # Currently supported endpoints
 
 ## /aggreagateorderbooks *encrypted method*
+     - invoke availablemarkets -e gdax,poloniex -c ETH/BTC/LTC,ETH/BTC/LTC
+     - inputs: specify the exchanges and the corresponding currencies you can trade on those exchanges
+     - returns list whose elments are a json object of a given currency pair to a list of exchanges that have that market.
+     - accepts json in paramter encrypted_data:
+     - encrypted_data = {
+                        [{exchange: "<exchange>"
+                          currencies: ["<currency>", "<currency>", ... ]
+                          ...}]
+       }
+
+## /aggreagateorderbooks *encrypted method*
      - curl -X POST --data '{"base_currency": "BTC","quote_currency": "ETH", "exchanges": ["bitfinex","poloniex"]}' -H "Content-type:application/json" http://localhost:9000/aggregateorderbooks
      - List<org.knowm.xchange.dto.trade.LimitOrder>, http://knowm.org/javadocs/xchange/org/knowm/xchange/dto/trade/LimitOrder.html 
      - Actual List is of a special type LimitOrderExchange which has the added exchange property so we know to which exchange the limit order belongs.
