@@ -1,4 +1,4 @@
-package org.altfund.xchangeinterface.restApi.interexchangearbitrage;
+package org.altfund.xchangeinterface.restApi.fillorkill;
 
 import java.util.Map;
 import java.util.List;
@@ -26,21 +26,21 @@ import org.altfund.xchangeinterface.restApi.util.ResponseHandler;
  */
 @Slf4j
 @RestController
-public class InterExchangeArbitrageController {
+public class FillOrKillController {
     private final XChangeService xChangeService;
     private final JsonHelper jh;
     private final ResponseHandler rh;
     private final MessageEncryption messageEncryption;
 
-    public InterExchangeArbitrageController(XChangeService xChangeService, JsonHelper jh, ResponseHandler rh, MessageEncryption messageEncryption) {
+    public FillOrKillController(XChangeService xChangeService, JsonHelper jh, ResponseHandler rh, MessageEncryption messageEncryption) {
         this.xChangeService = xChangeService;
         this.jh = jh;
         this.rh = rh;
         this.messageEncryption = messageEncryption;
     }
 
-    @RequestMapping(value = "/interexchangearbitrage", produces = "application/json")
-    public ResponseEntity<String> interExchangeArbitrage(@RequestParam Map<String, String> params) {
+    @RequestMapping(value = "/fillorkill", produces = "application/json")
+    public ResponseEntity<String> fillOrKill(@RequestParam Map<String, String> params) {
         List<Order> orders = null;
         String response = "";
         EncryptedOrder encryptedOrder = null;
@@ -50,7 +50,7 @@ public class InterExchangeArbitrageController {
 
             orders = jh.getObjectMapper().readValue(messageEncryption.decrypt(encryptedOrder),
                                             new TypeReference<List<Order>>(){});
-            response = xChangeService.interExchangeArbitrage(orders);
+            response = xChangeService.fillOrKill(orders);
 
         }
         catch (JsonProcessingException ex) {

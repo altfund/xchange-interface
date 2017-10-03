@@ -34,4 +34,5 @@ public interface XChangeService {
     ObjectNode getAggregateOrderBooks(MarketByExchanges marketByExchanges);
     String getAvailableMarkets(List<CurrenciesOnExchange> currenciesOnExchanges) throws Exception;
     String interExchangeArbitrage(List<Order> orders) throws Exception;
+    String fillOrKill(List<Order> orders) throws Exception;
 }

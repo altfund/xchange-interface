@@ -49,6 +49,7 @@ public class LimitOrderPlacer {
         OrderResponse.OrderResponseBuilder orderResponseBuilder = OrderResponse
         .builder()
         .orderType(order.getOrderType())
+        .altfundId(order.getAltfundId())
         .orderSpec(order.getOrderSpec());
 
         if ("ASK".equals(order.getOrderType())) {

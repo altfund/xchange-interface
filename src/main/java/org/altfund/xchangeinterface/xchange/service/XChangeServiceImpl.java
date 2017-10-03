@@ -332,6 +332,7 @@ public class XChangeServiceImpl implements XChangeService {
         return orderResponse;
     }
 
+    @Override
     public String interExchangeArbitrage(List<Order> orders) throws Exception {
         List<OrderResponse> orderResponses = new ArrayList<OrderResponse>();
         OrderResponse prevOrderResponse = null;
@@ -353,11 +354,11 @@ public class XChangeServiceImpl implements XChangeService {
                     String prevOrderStatusPhrase =  prevOrderResponse.getOrderStatus().getOrderStatusPhrase();
                     if (isCanceled) {
                         prevOrderResponse.getOrderStatus().setOrderStatusType(CANCELED);
-                        prevOrderResponse.getOrderStatus().setOrderStatusPhrase(prevOrderStatusType.toString() + ", " + prevOrderStatusPhrase);
+                        prevOrderResponse.getOrderStatus().setOrderStatusPhrase("Previously: " + prevOrderStatusType.toString() + ", " + prevOrderStatusPhrase);
                     }
                     else {
                         prevOrderResponse.getOrderStatus().setOrderStatusType(CANCEL_FAILED);
-                        prevOrderResponse.getOrderStatus().setOrderStatusPhrase(prevOrderStatusType.toString() + ", " + prevOrderStatusPhrase);
+                        prevOrderResponse.getOrderStatus().setOrderStatusPhrase("Previously: " + prevOrderStatusType.toString() + ", " + prevOrderStatusPhrase);
                     }
                     break;
                 }
@@ -366,6 +367,45 @@ public class XChangeServiceImpl implements XChangeService {
                 orderResponses.add(thisOrderResponse);
                 prevOrderResponse = thisOrderResponse;
                 prevOrder = thisOrder;
+            }
+        }
+        catch (Exception e) {
+            throw e;
+        }
+        response = jh.getObjectMapper().writeValueAsString(orderResponses);
+        return response;
+    }
+
+    @Override
+    public String fillOrKill(List<Order> orders) throws Exception {
+        List<OrderResponse> orderResponses = new ArrayList<OrderResponse>();
+        OrderResponse thisOrderResponse = null;
+        Order thisOrder = null;
+        boolean isCanceled = false;
+        String response = "";
+
+
+        //TODO does not fully support more than 2 orders beause it doesn't cancel the
+        //first N orders, only the previous one.
+        try {
+            for (int i = 0; i < orders.size(); i++) {
+                thisOrder = orders.get(i);
+                thisOrderResponse = placeLimitOrder(thisOrder);
+
+                if (!(thisOrderResponse.getOrderStatus().hasStatus(PLACED))) {
+                    isCanceled = cancelLimitOrder(thisOrder);
+                    OrderStatusTypes prevOrderStatusType = thisOrderResponse.getOrderStatus().getOrderStatusType();
+                    String prevOrderStatusPhrase =  thisOrderResponse.getOrderStatus().getOrderStatusPhrase();
+                    if (isCanceled) {
+                        thisOrderResponse.getOrderStatus().setOrderStatusType(CANCELED);
+                        thisOrderResponse.getOrderStatus().setOrderStatusPhrase("Previously: " + prevOrderStatusType.toString() + ", " + prevOrderStatusPhrase);
+                    }
+                    else {
+                        thisOrderResponse.getOrderStatus().setOrderStatusType(CANCEL_FAILED);
+                        thisOrderResponse.getOrderStatus().setOrderStatusPhrase("Previously: " + prevOrderStatusType.toString() + ", " + prevOrderStatusPhrase);
+                    }
+                }
+                orderResponses.add(thisOrderResponse);
             }
         }
         catch (Exception e) {
@@ -387,10 +427,10 @@ public class XChangeServiceImpl implements XChangeService {
         exchangeCredentials = order.getExchangeCredentials();
         String orderType = order.getOrderType();
 
-        if (!"ASK".equals(orderType.toUpperCase()) || !"BID".equals(orderType.toUpperCase())) {
+        if (!("ASK" == orderType.toUpperCase()) || !("BID" == orderType.toUpperCase())) {
             //errorMap.put("ERROR", "order type MUST be equal to 'ASK' or 'BID'");
             //return errorMap;
-            log.error("wrong value, must be ASK or BID");
+            log.error("wrong value, must be ASK or BID, was {}, {}", orderType);
             //TODO throw XChangeServiceException;
         }
 

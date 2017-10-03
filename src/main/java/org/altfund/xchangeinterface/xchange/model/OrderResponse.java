@@ -23,6 +23,7 @@ public class OrderResponse {
   //private LocalDateTime buyTimestamp;
 
   private String orderId;
+  private String altfundId;
   private OrderStatus orderStatus;
   private LocalDateTime timestamp;
 

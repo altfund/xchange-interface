@@ -6,7 +6,6 @@ import org.altfund.xchangeinterface.xchange.model.OrderSpec;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import java.util.UUID;
 
 @Data
 @NoArgsConstructor
@@ -14,6 +13,10 @@ public class Order {
 
   @JsonProperty("order_type")
   private String orderType;
+
+  @JsonProperty("altfund_id")
+  private String altfundId;
+
 
   @JsonProperty("order_specs")
   private OrderSpec orderSpec;
