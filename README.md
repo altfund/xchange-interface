@@ -1,11 +1,20 @@
 # API to talk to knowm exchanges
     - run with ```mvn spring-boot:run```
-    - experiment with provided tasks.py program
-    - must create config file named 'config' in same dir as tasks.py, use config_template
+    - experiment with invoke program provided in: https://github.com/altfund/pyxi
 
 # Currently supported endpoints
 
+## /getorders *encrypted method*
+    - invoke getorders -e gdax 018309840441,120992038232
+    - takes a list of order ids for a given exchange.
+    - returns list of knowm order objects.
+     - encrypted_data = {
+                        exchange_credentials: "exchange_credentials",
+                        order_ids: ["<id>", "<id>", ...]
+                       }
+
 ## /interexchangearbitrage *encrypted method*
+    - invoke iea -e gdax,poloniex -o BID,BID -b ETH,ETH -q BTC,BTC -v 0.1,0.1 -p 10000,10000 -t True,True
     - takes a list of orders. Same scheme for each order as method /limitorder
     - submits two limit orders to try and take advantage or an arbitrage opportunity
 

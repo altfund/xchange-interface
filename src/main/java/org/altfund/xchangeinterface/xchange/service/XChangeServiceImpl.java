@@ -1,6 +1,7 @@
 package org.altfund.xchangeinterface.xchange.service;
 
 import java.util.List;
+import java.util.Collection;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.TreeMap;
@@ -23,6 +24,7 @@ import org.knowm.xchange.dto.trade.UserTrades;
 import org.knowm.xchange.service.marketdata.MarketDataService;
 import org.knowm.xchange.dto.trade.LimitOrder;
 import org.knowm.xchange.dto.marketdata.OrderBook;
+import org.altfund.xchangeinterface.xchange.model.GetOrdersParams;
 import org.altfund.xchangeinterface.xchange.model.OrderStatusTypes;
 import static org.altfund.xchangeinterface.xchange.model.OrderStatusTypes.PLACED;
 import static org.altfund.xchangeinterface.xchange.model.OrderStatusTypes.CANCELED;
@@ -412,6 +414,30 @@ public class XChangeServiceImpl implements XChangeService {
             throw e;
         }
         response = jh.getObjectMapper().writeValueAsString(orderResponses);
+        return response;
+    }
+
+    @Override
+    public String getOrders(GetOrdersParams params) throws Exception{
+        TradeService tradeService = null;
+        Collection<org.knowm.xchange.dto.Order> orders = null;
+        String response = "";
+
+        try {
+            tradeService = xChangeFactory.getTradeService(params.getExchangeCredentials());
+            orders = tradeService.getOrder(params.getOrderIds());
+            log.debug("get orders: {}", orders);
+
+            //TODO use getExchangeScale()
+            //scale = xChangeFactory.getExchangeScale(order.getExchangeCredentials(), currencyPair);
+        }
+        catch (Exception e){
+            log.debug("Error from trade service resulting from calling getOrder: {}", e);
+            throw e;
+        }
+        log.debug("Order Response returning");
+
+        response = jh.getObjectMapper().writeValueAsString(orders);
         return response;
     }
 

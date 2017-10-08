@@ -1,6 +1,7 @@
 package org.altfund.xchangeinterface.xchange.service;
 
 import org.altfund.xchangeinterface.xchange.model.Order;
+import org.altfund.xchangeinterface.xchange.model.GetOrdersParams;
 import org.altfund.xchangeinterface.xchange.model.ExchangeCredentials;
 import org.altfund.xchangeinterface.xchange.model.Exchange;
 import org.altfund.xchangeinterface.xchange.model.OrderResponse;
@@ -35,4 +36,5 @@ public interface XChangeService {
     String getAvailableMarkets(List<CurrenciesOnExchange> currenciesOnExchanges) throws Exception;
     String interExchangeArbitrage(List<Order> orders) throws Exception;
     String fillOrKill(List<Order> orders) throws Exception;
+    String getOrders(GetOrdersParams params) throws Exception;
 }
