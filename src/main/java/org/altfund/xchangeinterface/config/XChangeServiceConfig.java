@@ -6,6 +6,7 @@ import org.altfund.xchangeinterface.xchange.service.XChangeService;
 import org.altfund.xchangeinterface.xchange.service.XChangeServiceImpl;
 import org.altfund.xchangeinterface.xchange.service.util.LimitOrderPlacer;
 import org.altfund.xchangeinterface.restApi.util.ResponseHandler;
+import org.altfund.xchangeinterface.restApi.util.RequestHandler;
 import org.dozer.DozerBeanMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -32,6 +33,11 @@ public class XChangeServiceConfig {
   @Bean
   public DozerBeanMapper dozerBeanMapper() {
     return new DozerBeanMapper();
+  }
+
+  @Bean
+  public RequestHandler requestHandler(MessageEncryption me, JsonHelper jh) {
+    return new RequestHandler(me, jh);
   }
 
   @Bean

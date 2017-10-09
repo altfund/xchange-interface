@@ -13,6 +13,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 import org.altfund.xchangeinterface.restApi.util.ResponseHandler;
+import org.altfund.xchangeinterface.restApi.util.RequestHandler;
 import org.altfund.xchangeinterface.util.JsonHelper;
 import org.altfund.xchangeinterface.xchange.model.EncryptedOrder;
 import org.altfund.xchangeinterface.xchange.model.MarketByExchanges;
@@ -30,29 +31,30 @@ public class AggregatedOrderBookController {
     private final XChangeService xChangeService;
     private final JsonHelper jh;
     private final ResponseHandler rh;
+    private final RequestHandler rq;
     private final MessageEncryption messageEncryption;
 
-    public AggregatedOrderBookController(XChangeService xChangeService, JsonHelper jh, ResponseHandler rh, MessageEncryption messageEncryption) {
+    public AggregatedOrderBookController(XChangeService xChangeService, JsonHelper jh, ResponseHandler rh, MessageEncryption messageEncryption, RequestHandler rq) {
         this.xChangeService = xChangeService;
         this.jh = jh;
         this.rh = rh;
+        this.rq = rq;
         this.messageEncryption = messageEncryption;
     }
 
     @RequestMapping(value = "/aggregateorderbooks", produces = "application/json")
-    public ResponseEntity<String> json(@RequestBody Map<String, String> params) {
+    public ResponseEntity<String> aggregateOrderBooks(@RequestBody Map<String, String> params) {
         MarketByExchanges marketByExchanges = null;
         String response = "";
         EncryptedOrder encryptedOrder;
         try {
+            /*
             response = jh.getObjectMapper().writeValueAsString(params);
-            //log.debug("rec str {}.", response);
             encryptedOrder = jh.getObjectMapper().readValue(response, EncryptedOrder.class);
-            //log.debug("rec iv {}.", encryptedOrder.getIv());
-            //log.debug("rec data {}.", encryptedOrder.getEncryptedData());
-
             marketByExchanges = jh.getObjectMapper().readValue(messageEncryption.decrypt(encryptedOrder),
                                                                   MarketByExchanges.class);
+            */
+            marketByExchanges = rq.decrypt(params, MarketByExchanges.class);
             ObjectNode json = xChangeService.getAggregateOrderBooks(marketByExchanges);
             response = jh.getObjectMapper().writeValueAsString(json);
             log.debug("response data {}.", response);
