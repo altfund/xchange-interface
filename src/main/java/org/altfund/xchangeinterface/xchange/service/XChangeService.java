@@ -32,9 +32,10 @@ public interface XChangeService {
     boolean cancelLimitOrder(Order order) throws Exception;
     String getTradeHistory(TradeHistory tradeHistory) throws Exception;
     String getOpenOrders(ExchangeCredentials exchangeCredentials) throws Exception;
-    ObjectNode getAggregateOrderBooks(MarketByExchanges marketByExchanges);
+    String getAggregateOrderBooks(MarketByExchanges marketByExchanges) throws Exception;
     String getAvailableMarkets(List<CurrenciesOnExchange> currenciesOnExchanges) throws Exception;
     String interExchangeArbitrage(List<Order> orders) throws Exception;
     String fillOrKill(List<Order> orders) throws Exception;
     String getOrders(GetOrdersParams params) throws Exception;
+    String isFeasible(String exchange) throws Exception;
 }

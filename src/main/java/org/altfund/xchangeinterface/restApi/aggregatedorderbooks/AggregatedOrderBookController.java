@@ -18,7 +18,6 @@ import org.altfund.xchangeinterface.util.JsonHelper;
 import org.altfund.xchangeinterface.xchange.model.EncryptedOrder;
 import org.altfund.xchangeinterface.xchange.model.MarketByExchanges;
 import org.altfund.xchangeinterface.xchange.service.XChangeService;
-import org.altfund.xchangeinterface.xchange.service.MessageEncryption;
 
 /*
  * The above example does not specify GET vs. PUT, POST, and so forth, because
@@ -32,14 +31,12 @@ public class AggregatedOrderBookController {
     private final JsonHelper jh;
     private final ResponseHandler rh;
     private final RequestHandler rq;
-    private final MessageEncryption messageEncryption;
 
-    public AggregatedOrderBookController(XChangeService xChangeService, JsonHelper jh, ResponseHandler rh, MessageEncryption messageEncryption, RequestHandler rq) {
+    public AggregatedOrderBookController(XChangeService xChangeService, JsonHelper jh, ResponseHandler rh, RequestHandler rq) {
         this.xChangeService = xChangeService;
         this.jh = jh;
         this.rh = rh;
         this.rq = rq;
-        this.messageEncryption = messageEncryption;
     }
 
     @RequestMapping(value = "/aggregateorderbooks", produces = "application/json")
@@ -48,17 +45,10 @@ public class AggregatedOrderBookController {
         String response = "";
         EncryptedOrder encryptedOrder;
         try {
-            /*
-            response = jh.getObjectMapper().writeValueAsString(params);
-            encryptedOrder = jh.getObjectMapper().readValue(response, EncryptedOrder.class);
-            marketByExchanges = jh.getObjectMapper().readValue(messageEncryption.decrypt(encryptedOrder),
-                                                                  MarketByExchanges.class);
-            */
             marketByExchanges = rq.decrypt(params, MarketByExchanges.class);
-            ObjectNode json = xChangeService.getAggregateOrderBooks(marketByExchanges);
-            response = jh.getObjectMapper().writeValueAsString(json);
+            //ObjectNode json = xChangeService.getAggregateOrderBooks(marketByExchanges);
+            response = xChangeService.getAggregateOrderBooks(marketByExchanges);
             log.debug("response data {}.", response);
-
         }
         catch (JsonProcessingException ex) {
             return rh.send(ex, true);
@@ -66,9 +56,6 @@ public class AggregatedOrderBookController {
         catch (Exception ex) {
             return rh.send(ex, true);
         }
-        //final HttpHeaders httpHeaders= new HttpHeaders();
-        //httpHeaders.setContentType(MediaType.APPLICATION_JSON);
-        //return new ResponseEntity<String>(response, httpHeaders, HttpStatus.OK);
         return rh.send(response, true);
     }
 }

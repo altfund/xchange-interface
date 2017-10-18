@@ -53,8 +53,12 @@ import org.altfund.xchangeinterface.xchange.service.util.ExtractBalances;
 import org.altfund.xchangeinterface.xchange.service.util.LimitOrderPlacer;
 
 import java.io.IOException;
+import java.lang.NoSuchMethodException;
 import java.util.NoSuchElementException;
 import org.altfund.xchangeinterface.xchange.service.exceptions.XChangeServiceException;
+
+//reflection
+import java.lang.reflect.Method;
 
 /**
  * altfund
@@ -174,7 +178,7 @@ public class XChangeServiceImpl implements XChangeService {
     }
 
     @Override
-    public ObjectNode getAggregateOrderBooks(MarketByExchanges marketByExchanges) {
+    public String getAggregateOrderBooks(MarketByExchanges marketByExchanges) throws Exception {
         List<OrderBook> books = null;
         MarketDataService marketDataService = null;
         List<String> exchanges = marketByExchanges.getExchanges();
@@ -213,18 +217,21 @@ public class XChangeServiceImpl implements XChangeService {
         catch (XChangeServiceException ex) {
             // import java.time.LocalDateTime;
             //log.error("xchangeservice excepti)on SHOULD THROW TO CALLER \n{}", ex.getStackTrace());
-            log.error("{}", ex.getStackTrace());
-            errorMap.put("ERROR", ex.getMessage());
-            return errorMap;
+            //log.error("{}", ex.getStackTrace());
+            //errorMap.put("ERROR", ex.getMessage());
+            //return errorMap;
+            return jh.getObjectMapper().writeValueAsString(errorMap);
         }
         catch (Exception ex) {
             // import java.time.LocalDateTime;
             //log.error("xchangeservice exception SHOULD THROW TO CALLER \n{}", ex.getStackTrace());
             log.error("{}", ex.getStackTrace());
-            errorMap.put("ERROR", ex.getMessage());
-            return errorMap;
+            //errorMap.put("ERROR", ex.getMessage());
+            //return errorMap;
+            throw ex;
         }
-        return orderBookMap;
+        //return orderBookMap;
+        return jh.getObjectMapper().writeValueAsString(orderBookMap);
     }
 
     @Override
@@ -261,7 +268,6 @@ public class XChangeServiceImpl implements XChangeService {
         Optional<AccountService> accountService;
         Optional<AccountInfo> accountInfo;
         Optional<Map<String, Wallet>> wallets;
-        Optional<BigDecimal> tradingFee;
         ObjectNode balanceMap = jh.getObjectNode();
         ObjectNode errorMap = jh.getObjectNode();
 
@@ -376,6 +382,38 @@ public class XChangeServiceImpl implements XChangeService {
         }
         response = jh.getObjectMapper().writeValueAsString(orderResponses);
         return response;
+    }
+
+    @Override
+    public String isFeasible(String exchange) throws Exception {
+        ExchangeCredentials exchangeCredentials = new ExchangeCredentials(exchange, "bogus", "bogus", "bogus");
+        Optional<AccountService> accountService;
+        ObjectNode errorMap = jh.getObjectNode();
+
+        try {
+            accountService = Optional.ofNullable(xChangeFactory.getAccountService(exchangeCredentials));
+            if (!accountService.isPresent()){
+                errorMap.put("ERROR", exchangeCredentials.getExchange() + " has no account service");
+                //return errorMap;
+                return jh.getObjectMapper().writeValueAsString(errorMap);
+            }
+        }
+        catch (XChangeServiceException ex) {
+            // import java.time.LocalDateTime;
+            errorMap.put("ERROR", exchangeCredentials.getExchange() + ex.toString() + ": " + ex.getMessage());
+            //return errorMap;
+            return jh.getObjectMapper().writeValueAsString(errorMap);
+        }
+        catch (IOException ex) {
+            // import java.time.LocalDateTime;
+            errorMap.put("ERROR", ex.getMessage());
+            //return errorMap;
+            return jh.getObjectMapper().writeValueAsString(errorMap);
+        }
+        log.debug("balancemap " + balanceMap);
+        //return balanceMap;
+        //return jh.getObjectMapper().writeValueAsString(balanceMap);
+        return "{\"Success\":\"all methods supported}";
     }
 
     @Override
