@@ -383,38 +383,81 @@ public class XChangeServiceImpl implements XChangeService {
         response = jh.getObjectMapper().writeValueAsString(orderResponses);
         return response;
     }
-
     @Override
     public String isFeasible(String exchange) throws Exception {
         ExchangeCredentials exchangeCredentials = new ExchangeCredentials(exchange, "bogus", "bogus", "bogus");
-        Optional<AccountService> accountService;
-        ObjectNode errorMap = jh.getObjectNode();
+        ObjectNode retMap = jh.getObjectNode();
+        String currentMethod = "";
 
-        try {
-            accountService = Optional.ofNullable(xChangeFactory.getAccountService(exchangeCredentials));
-            if (!accountService.isPresent()){
-                errorMap.put("ERROR", exchangeCredentials.getExchange() + " has no account service");
-                //return errorMap;
-                return jh.getObjectMapper().writeValueAsString(errorMap);
+        Method[] methods = XChangeFactory.class.getMethods();
+        Class[] parameterTypes = null;
+
+        for (Method method : methods) {
+            currentMethod = method.getName();
+            log.debug("curr method {}.", currentMethod);
+            Optional<Object> returnValue;
+            parameterTypes = method.getParameterTypes();
+            log.debug("param types len {}.", parameterTypes.length);
+            if (parameterTypes[0] == String.class) {
+                log.debug("string type");
+                returnValue = Optional.ofNullable(method.invoke(xChangeFactory, exchange));
+            } else {
+                log.debug("creds type");
+                returnValue = Optional.ofNullable(method.invoke(xChangeFactory, exchangeCredentials));
+            }
+
+            if (returnValue.isPresent()) {
+                retMap.put(currentMethod, "true");
+            }
+            else {
+                retMap.put(currentMethod, "false");
             }
         }
-        catch (XChangeServiceException ex) {
-            // import java.time.LocalDateTime;
-            errorMap.put("ERROR", exchangeCredentials.getExchange() + ex.toString() + ": " + ex.getMessage());
-            //return errorMap;
-            return jh.getObjectMapper().writeValueAsString(errorMap);
-        }
-        catch (IOException ex) {
-            // import java.time.LocalDateTime;
-            errorMap.put("ERROR", ex.getMessage());
-            //return errorMap;
-            return jh.getObjectMapper().writeValueAsString(errorMap);
-        }
-        log.debug("balancemap " + balanceMap);
-        //return balanceMap;
-        //return jh.getObjectMapper().writeValueAsString(balanceMap);
-        return "{\"Success\":\"all methods supported}";
+        /*
+           catch (XChangeServiceException ex) {
+           retMap.put(currentMethod, "false");
+           }
+           catch (IOException ex) {
+           retMap.put(currentMethod, "false");
+           }
+           retMap.put(currentMethod, "true");
+           */
+        return jh.getObjectMapper().writeValueAsString(retMap);
     }
+
+    /*
+       @Override
+       public String isFeasible(String exchange) throws Exception {
+       ExchangeCredentials exchangeCredentials = new ExchangeCredentials(exchange, "bogus", "bogus", "bogus");
+       Optional<AccountService> accountService;
+       ObjectNode errorMap = jh.getObjectNode();
+
+       try {
+       accountService = Optional.ofNullable(xChangeFactory.getAccountService(exchangeCredentials));
+       if (!accountService.isPresent()){
+       errorMap.put("ERROR", exchangeCredentials.getExchange() + " has no account service");
+    //return errorMap;
+    return jh.getObjectMapper().writeValueAsString(errorMap);
+       }
+       }
+       catch (XChangeServiceException ex) {
+    // import java.time.LocalDateTime;
+    errorMap.put("ERROR", exchangeCredentials.getExchange() + ex.toString() + ": " + ex.getMessage());
+    //return errorMap;
+    return jh.getObjectMapper().writeValueAsString(errorMap);
+       }
+       catch (IOException ex) {
+    // import java.time.LocalDateTime;
+    errorMap.put("ERROR", ex.getMessage());
+    //return errorMap;
+    return jh.getObjectMapper().writeValueAsString(errorMap);
+       }
+       log.debug("balancemap " + balanceMap);
+    //return balanceMap;
+    //return jh.getObjectMapper().writeValueAsString(balanceMap);
+    return "{\"Success\":\"all methods supported}";
+       }
+       */
 
     @Override
     public String fillOrKill(List<Order> orders) throws Exception {

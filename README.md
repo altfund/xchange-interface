@@ -2,7 +2,9 @@
     - run with ```mvn spring-boot:run```
     - experiment with invoke program provided in: https://github.com/altfund/pyxi
 
+
 # Currently supported endpoints
+
 
 ## /getorders *encrypted method*
     - invoke getorders -e gdax 018309840441,120992038232
@@ -13,12 +15,17 @@
                         order_ids: ["<id>", "<id>", ...]
                        }
 
+## /fillorkill *encrypted method*
+    - invoke fillorkill -e gdax,poloniex -o BID,BID -b ETH,ETH -q BTC,BTC -v 0.1,0.1 -p 10000,10000 -t True,True
+    - takes a list of orders. Same scheme for each order as method /limitorder
+    - submit N limit orders and cancels them immediately if they did no go through.
+
 ## /interexchangearbitrage *encrypted method*
     - invoke iea -e gdax,poloniex -o BID,BID -b ETH,ETH -q BTC,BTC -v 0.1,0.1 -p 10000,10000 -t True,True
     - takes a list of orders. Same scheme for each order as method /limitorder
     - submits two limit orders to try and take advantage or an arbitrage opportunity
 
-## /aggreagateorderbooks *encrypted method*
+## /availablemarkets *encrypted method*
      - invoke availablemarkets -e gdax,poloniex -c ETH/BTC/LTC,ETH/BTC/LTC
      - inputs: specify the exchanges and the corresponding currencies you can trade on those exchanges
      - returns list whose elments are a json object of a given currency pair to a list of exchanges that have that market.
@@ -30,12 +37,12 @@
        }
 
 ## /aggreagateorderbooks *encrypted method*
+     - invoke aggregateorderbooks -b BTC -q ETH -e gdax,poloniex 
      - curl -X POST --data '{"base_currency": "BTC","quote_currency": "ETH", "exchanges": ["bitfinex","poloniex"]}' -H "Content-type:application/json" http://localhost:9000/aggregateorderbooks
      - List<org.knowm.xchange.dto.trade.LimitOrder>, http://knowm.org/javadocs/xchange/org/knowm/xchange/dto/trade/LimitOrder.html 
      - Actual List is of a special type LimitOrderExchange which has the added exchange property so we know to which exchange the limit order belongs.
      - accepts json in paramter encrypted_data:
      - returns aggregate order book (asks/bids) of all the exchanges provided, for the given currency pair.
- ```
      - encrypted_data = {
                         base_currency: "<base_currency>",
                         quote_currency: "<quote_currency>",
@@ -48,7 +55,6 @@
      - getsOpenOrders
         - http://knowm.org/javadocs/xchange/org/knowm/xchange/service/trade/TradeService.html#getOpenOrders-org.knowm.xchange.service.trade.params.orders.OpenOrdersParams-
      - accepts json in paramter encrypted_data:
- ```
      - encrypted_data = {
         exchange_credentials: {
                                    exchange: "<exchange>", //String
@@ -68,7 +74,6 @@
      - getsTradeHistory
         - http://knowm.org/javadocs/xchange/org/knowm/xchange/service/trade/TradeService.html#getTradeHistory-org.knowm.xchange.service.trade.params.TradeHistoryParams-
      - accepts json in paramter encrypted_data:
- ```
      - encrypted_data = {
         exchange_credentials: {
                                    exchange: "<exchange>", //String
@@ -90,12 +95,12 @@
        }
 ```
 ## /cancelorder *encrypted method*
+     - invoke cancelorder -e gdax -o 2a43967e-8135-4652-b131-15f839e5db7a
      - /cancelorder?iv=XYZ&encrypted_data=ABC
      - org.knowm.xchange.dto.trade.LimitOrder, http://knowm.org/javadocs/xchange/org/knowm/xchange/dto/trade/LimitOrder.html 
      - cancels limit order
         - http://knowm.org/javadocs/xchange/org/knowm/xchange/service/trade/TradeService.html#cancelOrder-java.lang.String-
      - accepts json in paramter encrypted_data:
- ```
       encrypted_data = {
         exchange_credentials: {
                                    exchange: "<exchange>", //String
@@ -113,7 +118,6 @@
         - http://knowm.org/javadocs/xchange/org/knowm/xchange/service/trade/TradeService.html#placeLimitOrder-org.knowm.xchange.dto.trade.LimitOrder-
      - org.knowm.xchange.dto.trade.LimitOrder, http://knowm.org/javadocs/xchange/org/knowm/xchange/dto/trade/LimitOrder.html 
      - accepts json in paramter encrypted_data:
- ```
       encrypted_data = {
         exchange_credentials: {
                                    exchange: "<exchange>", //String
@@ -130,9 +134,10 @@
                         test: "<test>" //boolean
                     }
         }
-```
+    ```
 
 ## /balance *encrypted method*
+     - invoke balance -e gdax
      - /balance?iv=XYZ&encrypted_data=ABC
      - org.knowm.xchange.dto.account.Balance, http://knowm.org/javadocs/xchange/org/knowm/xchange/dto/account/Balance.html 
      - every balance for each wallet on given <exchange>.
@@ -146,7 +151,12 @@
     - org.knowm.xchange.dto.meta.CurrencyPairMetaData, http://knowm.org/javadocs/xchange/org/knowm/xchange/dto/meta/CurrencyPairMetaData.html
     - currency pair metadata for each currency pair on given <exchange>.
 
+## /isfeasible
+    - invoke isfeasible -e gdax
+    - /isfeasible?exchange=<exchange>
+    
 ## /currency
+    - invoke currency -e gdax
     - /currency?exchange=<exchange>
     - org.knowm.xchange.currency.Currency, http://knowm.org/javadocs/xchange/org/knowm/xchange/currency/Currency.html
     - currencies on given <exchange>.

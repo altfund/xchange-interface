@@ -14,8 +14,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.altfund.xchangeinterface.xchange.model.ExchangeCredentials;
 import org.altfund.xchangeinterface.xchange.model.Exchange;
 
-
-
 import org.knowm.xchange.service.trade.TradeService;
 import org.knowm.xchange.service.marketdata.MarketDataService;
 import org.knowm.xchange.currency.CurrencyPair;
@@ -29,7 +27,6 @@ import org.knowm.xchange.dto.meta.CurrencyPairMetaData;
 import java.io.IOException;
 import org.knowm.xchange.exceptions.ExchangeException;
 import org.altfund.xchangeinterface.xchange.service.exceptions.XChangeServiceException;
-
 
 /**
  * altfund
@@ -127,68 +124,6 @@ public class XChangeFactoryImpl implements XChangeFactory {
             return dispatcher.comeback(exchangeFirstTry.get());
         }
     }
-    @Override
-    public int getExchangeScale(ExchangeCredentials exchangeCredentials, CurrencyPair cp) {
-        Optional<org.knowm.xchange.Exchange> exchange =
-            Optional.ofNullable(exchangeCredsMap.get(exchangeCredentials));
-
-        Optional<ExchangeMetaData> exchangeMetaData =
-            Optional.ofNullable(exchange.get().getExchangeMetaData());
-
-        Optional<CurrencyPairMetaData> exCurPairMetaData =
-            Optional.ofNullable(exchangeMetaData.get().getCurrencyPairs().get(cp));
-        //if (exchangeMetaData.isPresent())
-        //    log.debug("exchange meta data {}.", exchangeMetaData.get());
-
-        Optional<CurrencyMetaData> exCurMd =
-            Optional.ofNullable(exchangeMetaData.get().getCurrencies().get(cp.base));
-
-        Optional<Integer> exBaseCurScale =
-            Optional.ofNullable(exCurMd.get().getScale());
-
-        if (exCurPairMetaData.isPresent()) {
-            log.debug("exchange cur pairs {}.", exCurPairMetaData.get());
-
-            if (exCurPairMetaData.get() != null) {
-                if (exCurPairMetaData.get().getMinimumAmount() != null) {
-                    //if (buyTradableAmount.compareTo(exCurPairMetaData.get().getMinimumAmount()) < 0)
-                    //    log.error("Tradeable amount to buy is less than minimum amount supported by exchange {}", orderSpec.getSellExchange());
-                     //TODO throq eroor instead of log.
-                    return exCurPairMetaData.get().getMinimumAmount().scale();
-                } else if (exBaseCurScale.isPresent()){
-                    return exBaseCurScale.get();
-                } else {
-                    return 5;
-                }
-            }
-        }
-        return 5;
-    }
-
-    @Override
-    public void testCurPairMetaData(Map<String, String> params, org.knowm.xchange.dto.Order order) {
-        log.debug("test cur pair meta data");
-        Optional<org.knowm.xchange.Exchange> exchangeFirstTry =
-            Optional.ofNullable(exchangeMap.get(params));
-        if (exchangeFirstTry.isPresent()) {
-            log.debug("exchange {}  present for given creds.", params.get("exchange"));
-            ExchangeMetaData exMetaData = exchangeFirstTry.get().getExchangeMetaData();
-            CurrencyPairMetaData curPairMetaData = exMetaData.getCurrencyPairs().get(order.getCurrencyPair());
-            if (curPairMetaData == null) {
-                log.debug("curPairMetaData is null");
-            } else {
-                log.debug("max maount {}.", curPairMetaData.getMaximumAmount() );
-                log.debug(" min amount {}.", curPairMetaData.getMinimumAmount() );
-                log.debug(" price scale {}.", curPairMetaData.getPriceScale() );
-                log.debug(" tradingfee {}.", curPairMetaData.getTradingFee() );
-                log.debug("tostring {}.", curPairMetaData.toString() );
-            }
-        }
-        else {
-            log.debug("exchange {}  NOT FOUND.", params.get("exchange"));
-        }
-
-    }
 
     protected ExchangeSpecification createExchangeSpecification(Exchange exchange, Map<String, String> params) {
         String exchangeClassName = exchange.getExchangeClassName();
@@ -230,20 +165,16 @@ public class XChangeFactoryImpl implements XChangeFactory {
         }
             }
 
-    /*
-       protected void setExchangeProperty(
-       Exchange exchange, String propertyName, Consumer<String> propertyConsumer) {
+    @Override
+    public org.knowm.xchange.Exchange getExchange(ExchangeCredentials exchangeCredentials) throws XChangeServiceException, IOException {
+        return variableDispatch(XChangeDispatcher.KnowmExchangeType, exchangeCredentials);
+    }
 
-       String exchangePropertyName = (exchange.name() + "_" + propertyName).toUpperCase();
+    @Override
+    public org.knowm.xchange.Exchange getExchange(String exchange) throws XChangeServiceException, IOException {
+        return variableDispatch(XChangeDispatcher.KnowmExchangeType, exchange);
+    }
 
-       Optional<String> exchangePropertyValue = Optional.ofNullable(environment.getProperty(exchangePropertyName));
-       if (exchangePropertyValue.isPresent()) {
-       log.debug("Setting exchange property {}={}.", exchangePropertyName, exchangePropertyValue.get());
-       propertyConsumer.accept(exchangePropertyValue.get());
-       }
-       else {
-
-       */
     @Override
     public TradeService getTradeService(ExchangeCredentials exchangeCredentials) throws XChangeServiceException, IOException {
         return variableDispatch(XChangeDispatcher.TradeServiceType, exchangeCredentials);
@@ -360,5 +291,32 @@ public class XChangeFactoryImpl implements XChangeFactory {
 
         return exchangeSpecification;
     }
+
+    /*
+    @Override
+    public void testCurPairMetaData(Map<String, String> params, org.knowm.xchange.dto.Order order) {
+        log.debug("test cur pair meta data");
+        Optional<org.knowm.xchange.Exchange> exchangeFirstTry =
+            Optional.ofNullable(exchangeMap.get(params));
+        if (exchangeFirstTry.isPresent()) {
+            log.debug("exchange {}  present for given creds.", params.get("exchange"));
+            ExchangeMetaData exMetaData = exchangeFirstTry.get().getExchangeMetaData();
+            CurrencyPairMetaData curPairMetaData = exMetaData.getCurrencyPairs().get(order.getCurrencyPair());
+            if (curPairMetaData == null) {
+                log.debug("curPairMetaData is null");
+            } else {
+                log.debug("max maount {}.", curPairMetaData.getMaximumAmount() );
+                log.debug(" min amount {}.", curPairMetaData.getMinimumAmount() );
+                log.debug(" price scale {}.", curPairMetaData.getPriceScale() );
+                log.debug(" tradingfee {}.", curPairMetaData.getTradingFee() );
+                log.debug("tostring {}.", curPairMetaData.toString() );
+            }
+        }
+        else {
+            log.debug("exchange {}  NOT FOUND.", params.get("exchange"));
+        }
+    }
+    */
+
 
 }

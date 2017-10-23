@@ -24,12 +24,13 @@ import org.knowm.xchange.exceptions.ExchangeException;
 public interface XChangeFactory {
 
   ExchangeMetaData getExchangeMetaData(String exchangeName) throws XChangeServiceException, IOException;
-  AccountService getAccountService(ExchangeCredentials exchangeCredentials) throws XChangeServiceException, IOException;
   List<CurrencyPair> getExchangeSymbols(String exchangeName) throws XChangeServiceException, IOException;
-  int getExchangeScale(ExchangeCredentials exchangeCredentials, CurrencyPair cp);
   MarketDataService getMarketDataService(String exchangeName) throws XChangeServiceException, IOException;
   //boolean setProperties(String exchangeName);
   //boolean setProperties(ExchangeCredentials exchangeCredentials);
-  void testCurPairMetaData(Map<String, String> params, org.knowm.xchange.dto.Order order);
- TradeService getTradeService(ExchangeCredentials exchangeCredentials) throws XChangeServiceException , ExchangeException, IOException;
+  //void testCurPairMetaData(Map<String, String> params, org.knowm.xchange.dto.Order order);
+   TradeService getTradeService(ExchangeCredentials exchangeCredentials) throws XChangeServiceException , ExchangeException, IOException;
+   AccountService getAccountService(ExchangeCredentials exchangeCredentials) throws XChangeServiceException, IOException;
+   org.knowm.xchange.Exchange getExchange(ExchangeCredentials exchangeCredentials) throws XChangeServiceException, IOException;
+   org.knowm.xchange.Exchange getExchange(String exchange) throws XChangeServiceException, IOException;
 }

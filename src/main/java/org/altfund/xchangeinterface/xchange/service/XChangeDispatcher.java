@@ -5,11 +5,13 @@ public  enum  XChangeDispatcher {
     /*
      * void remoteInit()?
      */
-    ExchangeCurrencyType, ExchangeSymbolsType, AccountServiceType, ExchangeSpecificationType, DefaultExchangeSpecificationType, MarketDataServiceType, TradeServiceType;
+    KnowmExchangeType, ExchangeCurrencyType, ExchangeSymbolsType, AccountServiceType, ExchangeSpecificationType, DefaultExchangeSpecificationType, MarketDataServiceType, TradeServiceType;
 
     @SuppressWarnings("unchecked")
     public <T> T comeback(org.knowm.xchange.Exchange exchange) {
         switch (this) {
+            case KnowmExchangeType:
+                return (T) exchange;
             case ExchangeCurrencyType:
                 return (T) exchange.getExchangeMetaData();
             case ExchangeSymbolsType:
