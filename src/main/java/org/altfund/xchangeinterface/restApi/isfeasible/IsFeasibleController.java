@@ -49,6 +49,6 @@ public class IsFeasibleController {
         catch (Exception ex) {
             response = "{\"ERROR\":\"Exception:"+ ex.getMessage() + "\"}";
         }
-        return rh.send(response, false);
+        return rh.send(response, true);
     }
 }

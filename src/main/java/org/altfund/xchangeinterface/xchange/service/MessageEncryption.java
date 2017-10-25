@@ -92,7 +92,7 @@ public class MessageEncryption implements EnvironmentAware, InitializingBean {
             IvParameterSpec iv = new IvParameterSpec(ivString.getBytes("UTF-8"));
             SecretKeySpec skeySpec = new SecretKeySpec(aesKey.getBytes("UTF-8"), "AES");
 
-            log.debug("init cipher");
+            log.debug("init cipher for decryption");
             Cipher cipher = Cipher.getInstance("AES/CFB8/NoPadding");
             cipher.init(Cipher.DECRYPT_MODE, skeySpec, iv);
 
@@ -116,6 +116,7 @@ public class MessageEncryption implements EnvironmentAware, InitializingBean {
                                                                  JsonProcessingException,
                                                                  InvalidAlgorithmParameterException {
         try{
+            log.debug("pt: {}.", plainText);
             ObjectNode jsonRes = jh.getObjectNode();
 
             final byte[] iv = new byte[16];
@@ -124,7 +125,7 @@ public class MessageEncryption implements EnvironmentAware, InitializingBean {
             IvParameterSpec ivSpec = new IvParameterSpec(iv);
             SecretKeySpec skeySpec = new SecretKeySpec(aesKey.getBytes("UTF-8"), "AES");
 
-            log.debug("init cipher");
+            log.debug("init cipher for encryption");
             Cipher cipher = Cipher.getInstance("AES/CFB8/NoPadding");
             cipher.init(Cipher.ENCRYPT_MODE, skeySpec, ivSpec);
 

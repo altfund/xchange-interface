@@ -72,6 +72,7 @@ public class XChangeFactoryImpl implements XChangeFactory {
                     return dispatcher.comeback(exchangeSecondTry.get());
                 }
             } else {
+                log.error("excahnge not present {}.", exchangeName);
                 throw new XChangeServiceException("Unknown exchange/exchange init failure, couldn't set properties with params: " + exchangeName);
             }
         }

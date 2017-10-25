@@ -387,32 +387,41 @@ public class XChangeServiceImpl implements XChangeService {
     public String isFeasible(String exchange) throws Exception {
         ExchangeCredentials exchangeCredentials = new ExchangeCredentials(exchange, "bogus", "bogus", "bogus");
         ObjectNode retMap = jh.getObjectNode();
+        ObjectNode exMap = jh.getObjectNode();
         String currentMethod = "";
 
         Method[] methods = XChangeFactory.class.getMethods();
         Class[] parameterTypes = null;
 
-        for (Method method : methods) {
-            currentMethod = method.getName();
-            log.debug("curr method {}.", currentMethod);
-            Optional<Object> returnValue;
-            parameterTypes = method.getParameterTypes();
-            log.debug("param types len {}.", parameterTypes.length);
-            if (parameterTypes[0] == String.class) {
-                log.debug("string type");
-                returnValue = Optional.ofNullable(method.invoke(xChangeFactory, exchange));
-            } else {
-                log.debug("creds type");
-                returnValue = Optional.ofNullable(method.invoke(xChangeFactory, exchangeCredentials));
-            }
+        try {
+            for (Method method : methods) {
+                currentMethod = method.getName();
+                log.debug("curr method {}.", currentMethod);
+                Optional<Object> returnValue;
+                parameterTypes = method.getParameterTypes();
+                log.debug("param types len {}.", parameterTypes.length);
+                if (parameterTypes[0] == String.class) {
+                    log.debug("string type");
+                    returnValue = Optional.ofNullable(method.invoke(xChangeFactory, exchange));
+                } else {
+                    log.debug("creds type");
+                    returnValue = Optional.ofNullable(method.invoke(xChangeFactory, exchangeCredentials));
+                }
 
-            if (returnValue.isPresent()) {
-                retMap.put(currentMethod, "true");
+                if (returnValue.isPresent()) {
+                    retMap.put(currentMethod, "true");
+                }
+                else {
+                    retMap.put(currentMethod, "false");
+                }
             }
-            else {
-                retMap.put(currentMethod, "false");
-            }
+            exMap.put(exchange, retMap);
         }
+        catch (Exception e) {
+            exMap.put("ERROR", "failed to process " + exchange);
+            exMap.put(exchange, retMap);
+        }
+
         /*
            catch (XChangeServiceException ex) {
            retMap.put(currentMethod, "false");
@@ -422,7 +431,7 @@ public class XChangeServiceImpl implements XChangeService {
            }
            retMap.put(currentMethod, "true");
            */
-        return jh.getObjectMapper().writeValueAsString(retMap);
+        return jh.getObjectMapper().writeValueAsString(exMap);
     }
 
     /*

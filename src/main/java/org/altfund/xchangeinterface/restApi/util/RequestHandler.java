@@ -18,6 +18,7 @@ import org.altfund.xchangeinterface.xchange.model.EncryptedOrder;
 import org.altfund.xchangeinterface.xchange.model.Order;
 import org.altfund.xchangeinterface.xchange.service.MessageEncryption;
 import org.altfund.xchangeinterface.xchange.service.XChangeService;
+import org.altfund.xchangeinterface.xchange.service.exceptions.XChangeServiceException;
 
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
@@ -98,9 +99,13 @@ public class RequestHandler {
     */
 
     public <T> T decrypt(Map<String, String> params, Class c) {
+        log.debug("call decrypt.");
         EncryptedOrder encryptedOrder = null;
         String request = "";
         T returnValue = null;
+        if (c == null) {
+            log.debug("Class was null, must pass valid class literal");
+        }
         try {
             request = jh.getObjectMapper().writeValueAsString(params);
             encryptedOrder = jh.getObjectMapper().readValue(request, EncryptedOrder.class);

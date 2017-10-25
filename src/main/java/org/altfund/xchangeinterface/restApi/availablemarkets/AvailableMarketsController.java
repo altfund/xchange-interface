@@ -56,6 +56,7 @@ public class AvailableMarketsController {
             return rh.send(ex, true);
         }
         catch (Exception ex) {
+            log.error("Caught general error when processing {}.", ex);
             return rh.send(ex, true);
         }
         //final HttpHeaders httpHeaders= new HttpHeaders();
