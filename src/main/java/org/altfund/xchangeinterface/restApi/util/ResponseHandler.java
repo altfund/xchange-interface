@@ -26,6 +26,7 @@ import javax.crypto.NoSuchPaddingException;
 import java.security.InvalidKeyException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.BadPaddingException;
+import org.altfund.xchangeinterface.xchange.service.exceptions.XChangeServiceException;
 
 import java.io.UnsupportedEncodingException;
 import org.knowm.xchange.exceptions.NotYetImplementedForExchangeException;
@@ -53,6 +54,9 @@ public class ResponseHandler {
 
     public String getErrorString(Exception ex) {
         String response = "";
+        if (ex instanceof XChangeServiceException) {
+            response = "{ERROR: initializing exchange "+ ex.getMessage() + "}";
+        }
         if (ex instanceof IOException) {
             response = "{ERROR: IOException "+ ex.getMessage() + "}";
         }

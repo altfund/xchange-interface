@@ -530,7 +530,6 @@ public class XChangeServiceImpl implements XChangeService {
         ObjectNode errorMap = jh.getObjectNode();
         TradeService tradeService = null;
         CurrencyPair currencyPair = null;
-        int scale = 5;
         exchangeCredentials = order.getExchangeCredentials();
         String orderType = order.getOrderType();
 
@@ -543,6 +542,7 @@ public class XChangeServiceImpl implements XChangeService {
 
         try {
             tradeService = xChangeFactory.getTradeService(exchangeCredentials);
+            org.knowm.xchange.Exchange exchange = xChangeFactory.getExchange(exchangeCredentials);
             currencyPair = new CurrencyPair(
                     order.getOrderSpec().getBaseCurrency().name(),
                     order.getOrderSpec().getQuoteCurrency().name()
@@ -550,7 +550,7 @@ public class XChangeServiceImpl implements XChangeService {
 
             //scale = xChangeFactory.getExchangeScale(order.getExchangeCredentials(), currencyPair);
 
-            orderResponse = limitOrderPlacer.placeOrder(order, tradeService, currencyPair, scale, jh);
+            orderResponse = limitOrderPlacer.placeOrder(order, tradeService, currencyPair, exchange, jh);
             /*
                if (orderResponse.isRetryable()) {
             //TODO is using same orderResponse wrong?
@@ -685,9 +685,12 @@ public class XChangeServiceImpl implements XChangeService {
         CurrencyPair cp = null;
         CurrencyPairMetaData cpmd = null;
         List<String> exchanges = null;
+        String currExchange = "";
         try {
+            log.debug("curr one xchanges size {}.", currenciesOnExchanges.size());
             for (int i = 0; i < currenciesOnExchanges.size(); i++) {
-                metaData = xChangeFactory.getExchangeMetaData(currenciesOnExchanges.get(i).getExchange());
+                currExchange = currenciesOnExchanges.get(i).getExchange();
+                metaData = xChangeFactory.getExchangeMetaData(currExchange);
                 cpMetaData = metaData.getCurrencyPairs();
                 currencies = currenciesOnExchanges.get(i).getCurrencies();
                 int numCurrencies = currencies.size();

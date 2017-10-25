@@ -1,5 +1,6 @@
 package org.altfund.xchangeinterface.xchange.config;
 
+import org.altfund.xchangeinterface.xchange.service.util.ExchangeScale;
 import org.altfund.xchangeinterface.xchange.service.XChangeFactory;
 import org.altfund.xchangeinterface.xchange.service.XChangeFactoryImpl;
 import org.altfund.xchangeinterface.xchange.service.XChangeService;
@@ -26,8 +27,13 @@ public class XChangeServiceConfig {
 
 
   @Bean
-  public LimitOrderPlacer limitOrderPlacer() {
-    return new LimitOrderPlacer();
+  public ExchangeScale exchangeScale() {
+    return new ExchangeScale();
+  }
+
+  @Bean
+  public LimitOrderPlacer limitOrderPlacer(ExchangeScale exchangeScale) {
+    return new LimitOrderPlacer(exchangeScale);
   }
 
   @Bean

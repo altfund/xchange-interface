@@ -15,6 +15,7 @@ import org.knowm.xchange.dto.trade.LimitOrder;
 import static org.knowm.xchange.dto.Order.OrderType.ASK;
 import static org.knowm.xchange.dto.Order.OrderType.BID;
 
+import org.altfund.xchangeinterface.xchange.service.util.ExchangeScale;
 import org.altfund.xchangeinterface.util.JsonHelper;
 import org.altfund.xchangeinterface.xchange.model.Order;
 import org.altfund.xchangeinterface.xchange.model.OrderSpec;
@@ -36,12 +37,17 @@ import org.knowm.xchange.exceptions.NotYetImplementedForExchangeException;
 
 @Slf4j
 public class LimitOrderPlacer {
+    private final ExchangeScale exchangeScale;
+
+    public LimitOrderPlacer(ExchangeScale exchangeScale) {
+        this.exchangeScale = exchangeScale;
+    }
 
     public OrderResponse placeOrder(
             Order order,
             TradeService tradeService,
             CurrencyPair currencyPair,
-            int scale,
+            org.knowm.xchange.Exchange exchange,
             JsonHelper jh) throws XChangeServiceException {
 
         LimitOrder lo = null;
@@ -51,6 +57,8 @@ public class LimitOrderPlacer {
         .orderType(order.getOrderType())
         .altfundId(order.getAltfundId())
         .orderSpec(order.getOrderSpec());
+
+        int scale = exchangeScale.getExchangeScale(currencyPair, exchange);
 
         if ("ASK".equals(order.getOrderType())) {
             lo = new LimitOrder.Builder(ASK, currencyPair)
