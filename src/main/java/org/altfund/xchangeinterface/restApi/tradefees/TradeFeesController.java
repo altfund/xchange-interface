@@ -36,7 +36,7 @@ public class TradeFeesController {
         try {
             response = jh.getObjectMapper().writeValueAsString(json);
         } catch (JsonProcessingException ex) {
-            response = "{ERROR: JsonProcessingException "+ ex.getMessage() + "}";
+            response = "{\"ERROR\": \"JsonProcessingException "+ ex.getMessage() + "\"}";
         }
         return rh.send(response, true);
     }

@@ -31,12 +31,12 @@ public class TickerController {
 
     @RequestMapping(value = "/ticker", produces = "application/json")
     public ResponseEntity<String> ticker(@RequestParam(value="exchange") String exchange) {
-        ObjectNode json = xChangeService.getTickers(exchange);
         String response = "";
         try {
+            ObjectNode json = xChangeService.getTickers(exchange);
             response = jh.getObjectMapper().writeValueAsString(json);
         } catch (JsonProcessingException ex) {
-            response = "{\"ERROR\":\"JsonProcessingException:"+ ex.getMessage() + "\"}";
+            response = "{\"ERROR\":\"JsonProcessinccounts/login/Exception:"+ ex.getMessage() + "\"}";
         }
         return rh.send(response, true);
     }

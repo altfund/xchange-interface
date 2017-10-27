@@ -55,40 +55,40 @@ public class ResponseHandler {
     public String getErrorString(Exception ex) {
         String response = "";
         if (ex instanceof XChangeServiceException) {
-            response = "{ERROR: initializing exchange "+ ex.getMessage() + "}";
+            response = "{\"ERROR\": \"initializing exchange "+ ex.getMessage() + "\"}";
         }
         if (ex instanceof IOException) {
-            response = "{ERROR: IOException "+ ex.getMessage() + "}";
+            response = "{\"ERROR\": \"IOException "+ ex.getMessage() + "\"}";
         }
         else if (ex instanceof ExchangeException) {
-            response = "{ERROR: ExchangeException "+ ex.getMessage() + "}";
+            response = "{\"ERROR\": \"ExchangeException "+ ex.getMessage() + "\"}";
         }
         else if (ex instanceof IllegalArgumentException) {
-            response = "{ERROR: IllegalArgumentException  "+ ex.getMessage() + "}";
+            response = "{\"ERROR\": \"IllegalArgumentException  "+ ex.getMessage() + "\"}";
         }
         else if (ex instanceof NotAvailableFromExchangeException) {
-            response = "{ERROR: NotAvailableFromExchangeException"+ ex.getMessage() + "}";
+            response = "{\"ERROR\": \"NotAvailableFromExchangeException"+ ex.getMessage() + "\"}";
         }
         else if (ex instanceof NotYetImplementedForExchangeException) {
-            response = "{ERROR: NotYetImplementedForExchangeException "+ ex.getMessage() + "}";
+            response = "{\"ERROR\": \"NotYetImplementedForExchangeException "+ ex.getMessage() + "\"}";
         }
         else if (ex instanceof NoSuchAlgorithmException) {
-            response = "{ERROR: NoSuchAlgorithmException (error with encryption) "+ ex.getMessage() + "}";
+            response = "{\"ERROR\": \"NoSuchAlgorithmException (error with encryption) "+ ex.getMessage() + "\"}";
         }
         else if (ex instanceof NoSuchPaddingException) {
-            response = "{ERROR: NoSuchPaddingException (error with encryption) "+ ex.getMessage() + "}";
+            response = "{\"ERROR\": \"NoSuchPaddingException (error with encryption) "+ ex.getMessage() + "\"}";
         }
         else if (ex instanceof InvalidKeyException) {
-            response = "{ERROR: Invalid Key Exception (error with encryption) "+ ex.getMessage() + "}";
+            response = "{\"ERROR\": \"Invalid Key Exception (error with encryption) "+ ex.getMessage() + "\"}";
         }
         else if (ex instanceof IllegalBlockSizeException) {
-            response = "{ERROR: Illegal Block Size Exception (error with encryption) "+ ex.getMessage() + "}";
+            response = "{\"ERROR\": \"Illegal Block Size Exception (error with encryption) "+ ex.getMessage() + "\"}";
         }
         else if (ex instanceof BadPaddingException) {
-            response = "{ERROR: BadPaddingException (error with encryption) "+ ex.getMessage() + "}";
+            response = "{\"ERROR\": \"BadPaddingException (error with encryption) "+ ex.getMessage() + "\"}";
         }
         else if (ex instanceof UnsupportedEncodingException) {
-            response = "{ERROR: UnsupportedEncodingException (error with encryption) "+ ex.getMessage() + "}";
+            response = "{\"ERROR\": \"UnsupportedEncodingException (error with encryption) "+ ex.getMessage() + "\"}";
         }
         return response;
     }
@@ -104,7 +104,7 @@ public class ResponseHandler {
     public ResponseEntity<String> send(String res, boolean doEncrypt) {
 
         if (res == null || res == "" || res == "null")
-            res = "{ERROR: No response, this error indicates an earlier error or issue was not handled properly.}";
+            res = "{\"ERROR\":\"No response, this error indicates an earlier error or issue was not handled properly.\"}";
         final HttpHeaders httpHeaders= new HttpHeaders();
         httpHeaders.setContentType(MediaType.APPLICATION_JSON);
         if (doEncrypt) {
