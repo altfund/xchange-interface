@@ -25,10 +25,12 @@ import org.knowm.xchange.service.marketdata.MarketDataService;
 import org.knowm.xchange.dto.trade.LimitOrder;
 import org.knowm.xchange.dto.marketdata.OrderBook;
 import org.altfund.xchangeinterface.xchange.model.GetOrdersParams;
+import org.altfund.xchangeinterface.xchange.model.OrderStatus;
 import org.altfund.xchangeinterface.xchange.model.OrderStatusTypes;
 import static org.altfund.xchangeinterface.xchange.model.OrderStatusTypes.PLACED;
 import static org.altfund.xchangeinterface.xchange.model.OrderStatusTypes.CANCELED;
 import static org.altfund.xchangeinterface.xchange.model.OrderStatusTypes.CANCEL_FAILED;
+import static org.altfund.xchangeinterface.xchange.model.OrderStatusTypes.PROCESSING_FAILED;
 import org.knowm.xchange.service.trade.params.TradeHistoryParamsAll;
 import org.knowm.xchange.service.trade.params.orders.OpenOrdersParams;
 
@@ -445,26 +447,26 @@ public class XChangeServiceImpl implements XChangeService {
        accountService = Optional.ofNullable(xChangeFactory.getAccountService(exchangeCredentials));
        if (!accountService.isPresent()){
        errorMap.put("ERROR", exchangeCredentials.getExchange() + " has no account service");
-    //return errorMap;
-    return jh.getObjectMapper().writeValueAsString(errorMap);
+//return errorMap;
+return jh.getObjectMapper().writeValueAsString(errorMap);
        }
        }
        catch (XChangeServiceException ex) {
-    // import java.time.LocalDateTime;
-    errorMap.put("ERROR", exchangeCredentials.getExchange() + ex.toString() + ": " + ex.getMessage());
-    //return errorMap;
-    return jh.getObjectMapper().writeValueAsString(errorMap);
+// import java.time.LocalDateTime;
+errorMap.put("ERROR", exchangeCredentials.getExchange() + ex.toString() + ": " + ex.getMessage());
+//return errorMap;
+return jh.getObjectMapper().writeValueAsString(errorMap);
        }
        catch (IOException ex) {
-    // import java.time.LocalDateTime;
-    errorMap.put("ERROR", ex.getMessage());
-    //return errorMap;
-    return jh.getObjectMapper().writeValueAsString(errorMap);
+// import java.time.LocalDateTime;
+errorMap.put("ERROR", ex.getMessage());
+//return errorMap;
+return jh.getObjectMapper().writeValueAsString(errorMap);
        }
        log.debug("balancemap " + balanceMap);
-    //return balanceMap;
-    //return jh.getObjectMapper().writeValueAsString(balanceMap);
-    return "{\"Success\":\"all methods supported}";
+//return balanceMap;
+//return jh.getObjectMapper().writeValueAsString(balanceMap);
+return "{\"Success\":\"all methods supported}";
        }
        */
 
@@ -479,30 +481,56 @@ public class XChangeServiceImpl implements XChangeService {
 
         //TODO does not fully support more than 2 orders beause it doesn't cancel the
         //first N orders, only the previous one.
-        try {
-            for (int i = 0; i < orders.size(); i++) {
-                thisOrder = orders.get(i);
-                thisOrderResponse = placeLimitOrder(thisOrder);
 
-                if (!(thisOrderResponse.getOrderStatus().hasStatus(PLACED))) {
-                    isCanceled = cancelLimitOrder(thisOrder);
-                    OrderStatusTypes prevOrderStatusType = thisOrderResponse.getOrderStatus().getOrderStatusType();
-                    String prevOrderStatusPhrase =  thisOrderResponse.getOrderStatus().getOrderStatusPhrase();
-                    if (isCanceled) {
-                        thisOrderResponse.getOrderStatus().setOrderStatusType(CANCELED);
-                        thisOrderResponse.getOrderStatus().setOrderStatusPhrase("Previously: " + prevOrderStatusType.toString() + ", " + prevOrderStatusPhrase);
-                    }
-                    else {
-                        thisOrderResponse.getOrderStatus().setOrderStatusType(CANCEL_FAILED);
-                        thisOrderResponse.getOrderStatus().setOrderStatusPhrase("Previously: " + prevOrderStatusType.toString() + ", " + prevOrderStatusPhrase);
+        //try {
+            for (int i = 0; i < orders.size(); i++) {
+                thisOrderResponse = null;
+                thisOrder = null;
+                try {
+                    thisOrder = orders.get(i);
+                    thisOrderResponse = placeLimitOrder(thisOrder);
+
+                    if (!(thisOrderResponse.getOrderStatus().hasStatus(PLACED))) {
+                        isCanceled = cancelLimitOrder(thisOrder);
+                        OrderStatusTypes prevOrderStatusType = thisOrderResponse.getOrderStatus().getOrderStatusType();
+                        String prevOrderStatusPhrase =  thisOrderResponse.getOrderStatus().getOrderStatusPhrase();
+                        if (isCanceled) {
+                            thisOrderResponse.getOrderStatus().setOrderStatusType(CANCELED);
+                            thisOrderResponse.getOrderStatus().setOrderStatusPhrase("Previously: " + prevOrderStatusType.toString() + ", " + prevOrderStatusPhrase);
+                        }
+                        else {
+                            thisOrderResponse.getOrderStatus().setOrderStatusType(CANCEL_FAILED);
+                            thisOrderResponse.getOrderStatus().setOrderStatusPhrase("Previously: " + prevOrderStatusType.toString() + ", " + prevOrderStatusPhrase);
+                        }
                     }
                 }
-                orderResponses.add(thisOrderResponse);
+                catch (Exception e) {
+                    OrderResponse.OrderResponseBuilder orderResponseBuilder = OrderResponse.
+                        builder();
+                    if (thisOrder == null) {
+                        orderResponseBuilder
+                            .orderType(null)
+                            .altfundId(null)
+                            .orderStatus(new OrderStatus(PROCESSING_FAILED, e))
+                            .orderSpec(null);
+                    }
+                    else {
+                        orderResponseBuilder
+                            .orderType(thisOrder.getOrderType())
+                            .altfundId(thisOrder.getAltfundId())
+                            .orderStatus(new OrderStatus(PROCESSING_FAILED, e))
+                            .orderSpec(thisOrder.getOrderSpec());
+                    }
+                    thisOrderResponse = orderResponseBuilder.build();
+                }
+                finally {
+                    orderResponses.add(thisOrderResponse);
+                }
             }
-        }
-        catch (Exception e) {
-            throw e;
-        }
+        //}
+        //catch (Exception e) {
+        //    throw e;
+        //}
         response = jh.getObjectMapper().writeValueAsString(orderResponses);
         return response;
     }

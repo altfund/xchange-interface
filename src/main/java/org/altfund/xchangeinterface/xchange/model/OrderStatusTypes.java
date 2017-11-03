@@ -13,7 +13,8 @@ public enum OrderStatusTypes {
        NETWORK_ERROR(OrderStatusKind.NETWORK_ERROR, "NETWORK_ERROR"),
        UNKNOWN_ERROR(OrderStatusKind.UNKNOWN_ERROR, "UNKNOWN_ERROR"),
        CANCELED(OrderStatusKind.CANCELED, "CANCELED"),
-       CANCEL_FAILED(OrderStatusKind.CANCEL_FAILED, "CANCEL_FAILED");
+       CANCEL_FAILED(OrderStatusKind.CANCEL_FAILED, "CANCEL_FAILED"),
+       PROCESSING_FAILED(OrderStatusKind.PROCESSING_FAILED, "PROCESSING_FAILED");
 
        public enum OrderStatusKind {
        PLACED,
@@ -23,7 +24,8 @@ public enum OrderStatusTypes {
        NETWORK_ERROR,
        UNKNOWN_ERROR,
        CANCELED,
-       CANCEL_FAILED
+       CANCEL_FAILED,
+       PROCESSING_FAILED
        }
 
     private OrderStatusKind orderStatusKind;
