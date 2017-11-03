@@ -495,12 +495,12 @@ return "{\"Success\":\"all methods supported}";
                         OrderStatusTypes prevOrderStatusType = thisOrderResponse.getOrderStatus().getOrderStatusType();
                         String prevOrderStatusPhrase =  thisOrderResponse.getOrderStatus().getOrderStatusPhrase();
                         if (isCanceled) {
-                            thisOrderResponse.getOrderStatus().setOrderStatusType(CANCELED);
-                            thisOrderResponse.getOrderStatus().setOrderStatusPhrase("Previously: " + prevOrderStatusType.toString() + ", " + prevOrderStatusPhrase);
+                            //thisOrderResponse.getOrderStatus().setOrderStatusType(CANCELED);
+                            //thisOrderResponse.getOrderStatus().setOrderStatusPhrase("Previously: " + prevOrderStatusType.toString() + ", " + prevOrderStatusPhrase);
                         }
                         else {
-                            thisOrderResponse.getOrderStatus().setOrderStatusType(CANCEL_FAILED);
-                            thisOrderResponse.getOrderStatus().setOrderStatusPhrase("Previously: " + prevOrderStatusType.toString() + ", " + prevOrderStatusPhrase);
+                            //thisOrderResponse.getOrderStatus().setOrderStatusType(CANCEL_FAILED);
+                            //thisOrderResponse.getOrderStatus().setOrderStatusPhrase("Previously: " + prevOrderStatusType.toString() + ", " + prevOrderStatusPhrase);
                         }
                     }
                 }
