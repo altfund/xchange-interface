@@ -33,6 +33,7 @@ import static org.altfund.xchangeinterface.xchange.model.OrderStatusTypes.CANCEL
 import static org.altfund.xchangeinterface.xchange.model.OrderStatusTypes.PROCESSING_FAILED;
 import org.knowm.xchange.service.trade.params.TradeHistoryParamsAll;
 import org.knowm.xchange.service.trade.params.orders.OpenOrdersParams;
+import org.altfund.xchangeinterface.xchange.service.util.ExtractExceptions;
 
 import org.altfund.xchangeinterface.util.JsonHelper;
 import org.altfund.xchangeinterface.util.KWayMerge;
@@ -357,7 +358,7 @@ public class XChangeServiceImpl implements XChangeService {
         //first N orders, only the previous one.
         try {
             for (int i = 0; i < orders.size(); i++) {
-                if ((prevOrderResponse != null) && !(prevOrderResponse.getOrderStatus().hasStatus(PLACED))) {
+                if ((prevOrderResponse != null) && prevOrderResponse.getOrderStatus().hasStatus(PLACED)) {
                     prevOrder.setOrderId(prevOrderResponse.getOrderId());
                     isCanceled = cancelLimitOrder(prevOrder);
                     OrderStatusTypes prevOrderStatusType = prevOrderResponse.getOrderStatus().getOrderStatusType();
@@ -490,17 +491,17 @@ return "{\"Success\":\"all methods supported}";
                     thisOrder = orders.get(i);
                     thisOrderResponse = placeLimitOrder(thisOrder);
 
-                    if (!(thisOrderResponse.getOrderStatus().hasStatus(PLACED))) {
+                    if (thisOrderResponse.getOrderStatus().hasStatus(PLACED)) {
                         isCanceled = cancelLimitOrder(thisOrder);
                         OrderStatusTypes prevOrderStatusType = thisOrderResponse.getOrderStatus().getOrderStatusType();
                         String prevOrderStatusPhrase =  thisOrderResponse.getOrderStatus().getOrderStatusPhrase();
                         if (isCanceled) {
-                            //thisOrderResponse.getOrderStatus().setOrderStatusType(CANCELED);
-                            //thisOrderResponse.getOrderStatus().setOrderStatusPhrase("Previously: " + prevOrderStatusType.toString() + ", " + prevOrderStatusPhrase);
+                            thisOrderResponse.getOrderStatus().setOrderStatusType(CANCELED);
+                            thisOrderResponse.getOrderStatus().setOrderStatusPhrase("Previously: " + prevOrderStatusType.toString() + ", " + prevOrderStatusPhrase);
                         }
                         else {
-                            //thisOrderResponse.getOrderStatus().setOrderStatusType(CANCEL_FAILED);
-                            //thisOrderResponse.getOrderStatus().setOrderStatusPhrase("Previously: " + prevOrderStatusType.toString() + ", " + prevOrderStatusPhrase);
+                            thisOrderResponse.getOrderStatus().setOrderStatusType(CANCEL_FAILED);
+                            thisOrderResponse.getOrderStatus().setOrderStatusPhrase("Previously: " + prevOrderStatusType.toString() + ", " + prevOrderStatusPhrase);
                         }
                     }
                 }
@@ -511,14 +512,16 @@ return "{\"Success\":\"all methods supported}";
                         orderResponseBuilder
                             .orderType(null)
                             .altfundId(null)
-                            .orderStatus(new OrderStatus(PROCESSING_FAILED, e))
+                            //.orderStatus(ExtractExceptions.translate(PROCESSING_FAILED, e))
+                            .orderStatus(ExtractExceptions.translate(e))
                             .orderSpec(null);
                     }
                     else {
                         orderResponseBuilder
                             .orderType(thisOrder.getOrderType())
                             .altfundId(thisOrder.getAltfundId())
-                            .orderStatus(new OrderStatus(PROCESSING_FAILED, e))
+                            //.orderStatus(ExtractExceptions.translate(PROCESSING_FAILED, e))
+                            .orderStatus(ExtractExceptions.translate(e))
                             .orderSpec(thisOrder.getOrderSpec());
                     }
                     thisOrderResponse = orderResponseBuilder.build();

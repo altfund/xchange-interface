@@ -53,10 +53,10 @@ public class LimitOrderPlacer {
         LimitOrder lo = null;
         OrderResponse orderResponse = null;
         OrderResponse.OrderResponseBuilder orderResponseBuilder = OrderResponse
-        .builder()
-        .orderType(order.getOrderType())
-        .altfundId(order.getAltfundId())
-        .orderSpec(order.getOrderSpec());
+            .builder()
+            .orderType(order.getOrderType())
+            .altfundId(order.getAltfundId())
+            .orderSpec(order.getOrderSpec());
 
         int scale = exchangeScale.getExchangeScale(currencyPair, exchange);
 
@@ -66,6 +66,7 @@ public class LimitOrderPlacer {
                         order.getOrderSpec().getVolume().setScale(scale, BigDecimal.ROUND_HALF_EVEN)
                         )
                 .limitPrice(order.getOrderSpec().getPrice())
+                //.id(order.getOrderId())
                 .build();
         }
         else {
@@ -74,6 +75,7 @@ public class LimitOrderPlacer {
                         order.getOrderSpec().getVolume().setScale(scale, BigDecimal.ROUND_HALF_EVEN)
                         )
                 .limitPrice(order.getOrderSpec().getPrice())
+                //.id(order.getOrderId())
                 .build();
         }
 
@@ -85,50 +87,50 @@ public class LimitOrderPlacer {
 
             if ("ASK".equals(order.getOrderType())) {
                 verifyOrder(
-                    tradeService,
-                    lo,
-                    orderResponseBuilder::orderStatus,
-                    orderResponseBuilder::timestamp
-                    );
+                        tradeService,
+                        lo,
+                        orderResponseBuilder::orderStatus,
+                        orderResponseBuilder::timestamp
+                        );
             }
             else {
                 verifyOrder(
-                    tradeService,
-                    lo,
-                    orderResponseBuilder::orderStatus,
-                    orderResponseBuilder::timestamp
-                    );
+                        tradeService,
+                        lo,
+                        orderResponseBuilder::orderStatus,
+                        orderResponseBuilder::timestamp
+                        );
             }
         }
         else  {
 
             if ("ASK".equals(order.getOrderType())) {
                 sellOrderStatus = placeOrder(
-                    tradeService,
-                    lo,
-                    orderResponseBuilder::orderId,
-                    orderResponseBuilder::orderStatus,
-                    orderResponseBuilder::timestamp
-                    );
+                        tradeService,
+                        lo,
+                        orderResponseBuilder::orderId,
+                        orderResponseBuilder::orderStatus,
+                        orderResponseBuilder::timestamp
+                        );
             }
             else {
                 buyOrderStatus = placeOrder(
-                    tradeService,
-                    lo,
-                    orderResponseBuilder::orderId,
-                    orderResponseBuilder::orderStatus,
-                    orderResponseBuilder::timestamp
-                    );
+                        tradeService,
+                        lo,
+                        orderResponseBuilder::orderId,
+                        orderResponseBuilder::orderStatus,
+                        orderResponseBuilder::timestamp
+                        );
             }
         }
         try {
-        log.debug("built order response {}", jh.getObjectMapper().writeValueAsString(orderResponseBuilder.build()));
+            log.debug("built order response {}", jh.getObjectMapper().writeValueAsString(orderResponseBuilder.build()));
         }
         catch(Exception ex) {
             log.error("json processing error {}", ex.getMessage());
         }
         return orderResponseBuilder.build();
-    }
+            }
 
     private OrderStatus placeOrder(
             TradeService tradeService, LimitOrder limitOrder,
@@ -149,7 +151,7 @@ public class LimitOrderPlacer {
                     e.getClass().getCanonicalName(),
                     e.getMessage(),
                     e.getStackTrace());
-            orderStatus = translateException(e);
+            orderStatus = ExtractExceptions.translate(e);
         }
 
         orderStatusConsumer.accept(orderStatus);
@@ -173,7 +175,7 @@ public class LimitOrderPlacer {
                     e.getClass().getCanonicalName(),
                     e.getMessage(),
                     e.getStackTrace());
-            orderStatus = translateException(e);
+            orderStatus = ExtractExceptions.translate(e);
         }
 
         orderStatusConsumer.accept(orderStatus);
@@ -181,39 +183,4 @@ public class LimitOrderPlacer {
 
         return orderStatus;
             }
-
-    //private OrderStatus orderStatusPlaced() {
-    //   return new OrderStatus("PLACED", "");
-    //}
-
-    //TODO make all reponses use order status via translate exception
-    //use a jsonify exception class maybe?
-    private OrderStatus translateException(Exception e) {
-        if (e instanceof IOException) {
-            e.printStackTrace();
-            return new OrderStatus(NETWORK_ERROR, e);
-            //return OrderStatus.NETWORK_ERROR;
-        } else if (e instanceof ExchangeException) {
-            //e.printStackTrace();
-            //return OrderStatus.GENERAL_EXCHANGE_ERROR;
-            return new OrderStatus(GENERAL_EXCHANGE_ERROR, e);
-        } else if (e instanceof IllegalArgumentException) {
-            //e.printStackTrace();
-            //return OrderStatus.GENERAL_EXCHANGE_ERROR;
-            return new OrderStatus(GENERAL_EXCHANGE_ERROR, e);
-        } else if (e instanceof NotAvailableFromExchangeException) {
-            e.printStackTrace();
-            //return OrderStatus.NOT_AVAILABLE_FROM_EXCHANGE;
-            return new OrderStatus(NOT_AVAILABLE_FROM_EXCHANGE, e);
-        } else if (e instanceof NotYetImplementedForExchangeException) {
-            e.printStackTrace();
-            //return OrderStatus.NOT_YET_IMPLEMENTED_FOR_EXCHANGE;
-            return new OrderStatus(NOT_YET_IMPLEMENTED_FOR_EXCHANGE, e);
-        } else {
-            return new OrderStatus(UNKNOWN_ERROR, e);
-            //e.printStackTrace();
-            //return OrderStatus.UNKNOWN_ERROR;
-            //return new OrderStatus(UNKNOWN_ERROR, e);
-        }
-    }
 }
