@@ -16,6 +16,7 @@ import org.altfund.xchangeinterface.xchange.model.OrderStatusTypes;
 import static org.altfund.xchangeinterface.xchange.model.OrderStatusTypes.PLACED;
 import static org.altfund.xchangeinterface.xchange.model.OrderStatusTypes.PRICE_TOO_SMALL;
 import static org.altfund.xchangeinterface.xchange.model.OrderStatusTypes.PRICE_TOO_LARGE;
+import static org.altfund.xchangeinterface.xchange.model.OrderStatusTypes.INVALID_ARGUMENTS_VOLUME;
 import static org.altfund.xchangeinterface.xchange.model.OrderStatusTypes.ORDER_TOO_SMALL;
 import static org.altfund.xchangeinterface.xchange.model.OrderStatusTypes.ORDER_TOO_LARGE;
 import static org.altfund.xchangeinterface.xchange.model.OrderStatusTypes.INSUFFICIENT_FUNDS;
@@ -60,7 +61,11 @@ public class ExtractExceptions {
     public static OrderStatus translate(Exception e) {
         String errorPhrase = getErrorPhrase(e);
 
-        if (errorPhrase.toLowerCase().contains("too small") && errorPhrase.toLowerCase().contains("size")) {
+        if (errorPhrase.toLowerCase().contains("invalid arguments") && errorPhrase.toLowerCase().contains("volume")) {
+            e.printStackTrace();
+            return new OrderStatus(INVALID_ARGUMENTS_VOLUME, errorPhrase);
+        }
+        else if (errorPhrase.toLowerCase().contains("too small") && errorPhrase.toLowerCase().contains("size")) {
             e.printStackTrace();
             return new OrderStatus(ORDER_TOO_SMALL, errorPhrase);
         }
