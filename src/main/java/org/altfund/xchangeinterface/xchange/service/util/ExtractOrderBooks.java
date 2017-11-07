@@ -74,6 +74,7 @@ public class ExtractOrderBooks {
     }
 
     private static OrderBook getOrderBook(MarketDataService marketDataService, CurrencyPair cp) throws Exception{
+        //TODO add exchange specific logic to get order book if it is unaggregated.
         return marketDataService.getOrderBook(cp);
     }
 }
