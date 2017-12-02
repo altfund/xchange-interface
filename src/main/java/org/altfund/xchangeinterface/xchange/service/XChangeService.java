@@ -12,6 +12,7 @@ import org.altfund.xchangeinterface.xchange.model.CurrenciesOnExchange;
 import org.altfund.xchangeinterface.xchange.service.exceptions.XChangeServiceException;
 
 import org.knowm.xchange.currency.Currency;
+import org.knowm.xchange.currency.CurrencyPair;
 import org.knowm.xchange.dto.meta.CurrencyMetaData;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -29,8 +30,10 @@ public interface XChangeService {
     ObjectNode getExchangeTradeFees(Map<String, String> params);
     ObjectNode getExchangeBalances(ExchangeCredentials params);
     OrderResponse placeLimitOrder(Order order) throws Exception;
+    List<CurrencyPair> getExchangeSymbols(String exchange);
     boolean cancelLimitOrder(Order order) throws Exception;
     String getTradeHistory(TradeHistory tradeHistory) throws Exception;
+    String getFundingHistory(TradeHistory tradeHistory) throws Exception;
     String getOpenOrders(ExchangeCredentials exchangeCredentials) throws Exception;
     String getAggregateOrderBooks(MarketByExchanges marketByExchanges) throws Exception;
     String getAvailableMarkets(List<CurrenciesOnExchange> currenciesOnExchanges) throws Exception;

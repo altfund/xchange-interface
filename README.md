@@ -68,6 +68,31 @@
                       } 
        }
 ```
+## /fundinghistory *encrypted method*
+     - /fundinghistory?iv=XYZ&encrypted_data=ABC
+     - org.knowm.xchange.dto.trade.UserTrades, http://knowm.org/javadocs/xchange/org/knowm/xchange/dto/trade/UserTrades.html 
+     - fundinghistory
+     - accepts json in paramter encrypted_data:
+     - encrypted_data = {
+        exchange_credentials: {
+                                   exchange: "<exchange>", //String
+                                   key: "<key>", //String
+                                   secret="<secret>", //String
+                                   passphrase="<passphrase>" // String
+                               },
+        trade_params: {
+                            currency_pair: "<currency_pair>",  //CurrencyPair
+                            currency_pairs: "<currency_pairs>", //Collection<CurrencyPair>
+                            end_id: "<end_id>", // String
+                            end_time: "<end_time>", // Date
+                            offset: "<offset>", // Long
+                            page_length: "<page_length>",  // Integer
+                            page_number: "<page_number>", //Integer
+                            start_id: "<start_id>", // String
+                            start_time: "<start_time>" // startTime
+                      } 
+       }
+```
 ## /tradehistory *encrypted method*
      - /tradehistory?iv=XYZ&encrypted_data=ABC
      - org.knowm.xchange.dto.trade.UserTrades, http://knowm.org/javadocs/xchange/org/knowm/xchange/dto/trade/UserTrades.html 
@@ -155,6 +180,11 @@
     - invoke isfeasible -e gdax
     - /isfeasible?exchange=<exchange>
     
+## /exchangesymbols
+    - invoke exchangesymbols -e gdax
+    - /exchangesymbols?exchange=<exchange>
+    - exchange symbols on given <exchange>.
+
 ## /currency
     - invoke currency -e gdax
     - /currency?exchange=<exchange>

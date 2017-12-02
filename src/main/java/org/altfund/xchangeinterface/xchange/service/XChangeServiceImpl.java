@@ -17,13 +17,14 @@ import org.knowm.xchange.service.trade.TradeService;
 import org.knowm.xchange.dto.meta.ExchangeMetaData;
 import org.knowm.xchange.dto.meta.CurrencyPairMetaData;
 import org.knowm.xchange.currency.CurrencyPair;
-import org.knowm.xchange.service.account.AccountService;
 import org.knowm.xchange.dto.account.AccountInfo;
 import org.knowm.xchange.dto.account.Wallet;
 import org.knowm.xchange.dto.trade.UserTrades;
 import org.knowm.xchange.service.marketdata.MarketDataService;
 import org.knowm.xchange.dto.trade.LimitOrder;
 import org.knowm.xchange.dto.marketdata.OrderBook;
+import org.knowm.xchange.dto.account.FundingRecord;
+import org.knowm.xchange.service.account.AccountService;
 import org.altfund.xchangeinterface.xchange.model.GetOrdersParams;
 import org.altfund.xchangeinterface.xchange.model.OrderStatus;
 import org.altfund.xchangeinterface.xchange.model.OrderStatusTypes;
@@ -34,6 +35,7 @@ import static org.altfund.xchangeinterface.xchange.model.OrderStatusTypes.PROCES
 import org.knowm.xchange.service.trade.params.TradeHistoryParamsAll;
 import org.knowm.xchange.service.trade.params.orders.OpenOrdersParams;
 import org.altfund.xchangeinterface.xchange.service.util.ExtractExceptions;
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 import org.altfund.xchangeinterface.util.JsonHelper;
 import org.altfund.xchangeinterface.util.KWayMerge;
@@ -114,6 +116,36 @@ public class XChangeServiceImpl implements XChangeService {
             return errorMap;
         }
         return currencyMap;
+    }
+
+    @Override
+    public List<CurrencyPair> getExchangeSymbols(String exchange) {
+        Optional<List<CurrencyPair>>  cpList;
+        ObjectNode errorMap = jh.getObjectNode();
+
+        try {
+            //xChangeFactory.setProperties(exchange);
+            cpList = Optional.ofNullable(xChangeFactory.getExchangeSymbols(exchange));
+            if (!cpList.isPresent()){
+                //errorMap.put("ERROR", "No such exchange " + exchange);
+                //return errorMap;
+                return null;
+            }
+
+        }
+        catch (XChangeServiceException ex) {
+            // import java.time.LocalDateTime;
+            //errorMap.put("ERROR", ex.getMessage());
+            //return errorMap;
+            return null;
+        }
+        catch (IOException ex) {
+            // import java.time.LocalDateTime;
+            //errorMap.put("ERROR", ex.getMessage());
+            //return errorMap;
+            return null;
+        }
+        return cpList.get();
     }
 
     public ObjectNode getTickers(String exchange) {
@@ -202,14 +234,20 @@ public class XChangeServiceImpl implements XChangeService {
         try {
             log.debug("Begin extract MarketDataService(s)");
             for (int i = 0; i < exchanges.size(); i++) {
-                log.debug("Get MarketDataService for {}", exchanges.get(i));
-                marketDataService = xChangeFactory.getMarketDataService(exchanges.get(i));
-                ob = ExtractOrderBooks.raw(marketDataService, cp, exchanges.get(i));
+                try {
+                    log.debug("Get MarketDataService for {}", exchanges.get(i));
+                    marketDataService = xChangeFactory.getMarketDataService(exchanges.get(i));
+                    ob = ExtractOrderBooks.raw(marketDataService, cp, exchanges.get(i));
 
-                asks.add(ob.getAsks());
-                askExchanges.add(exchanges.get(i));
-                bids.add(ob.getBids());
-                bidExchanges.add(exchanges.get(i));
+                    asks.add(ob.getAsks());
+                    askExchanges.add(exchanges.get(i));
+                    bids.add(ob.getBids());
+                    bidExchanges.add(exchanges.get(i));
+                }
+                catch (Exception ex) {
+                    log.debug("Get MarketDataService for {} FAILED.", exchanges.get(i));
+                    ex.printStackTrace();
+                }
             }
             aggregatedAsks = kWayMerge.mergeKLists(asks, askExchanges);
             aggregatedBids = kWayMerge.mergeKLists(bids, bidExchanges);
@@ -217,6 +255,7 @@ public class XChangeServiceImpl implements XChangeService {
             orderBookMap.put("BIDS", jh.getObjectMapper().writeValueAsString(aggregatedBids));
             //params for this method are needed because it has "base_currency" and "quote_currency"
         }
+        /*
         catch (XChangeServiceException ex) {
             // import java.time.LocalDateTime;
             //log.error("xchangeservice excepti)on SHOULD THROW TO CALLER \n{}", ex.getStackTrace());
@@ -225,6 +264,7 @@ public class XChangeServiceImpl implements XChangeService {
             //return errorMap;
             return jh.getObjectMapper().writeValueAsString(errorMap);
         }
+        */
         catch (Exception ex) {
             // import java.time.LocalDateTime;
             //log.error("xchangeservice exception SHOULD THROW TO CALLER \n{}", ex.getStackTrace());
@@ -624,11 +664,12 @@ return "{\"Success\":\"all methods supported}";
         ExchangeCredentials exchangeCredentials = null;
         TradeService tradeService = null;
         CurrencyPair currencyPair = null;
+        //TradeHistoryParamsAll tradeParams = null;
+        org.knowm.xchange.service.trade.params.TradeHistoryParams tradeParams = null;
         TradeHistoryParams tradeHistoryParams = null;
         int scale = 5;
         exchangeCredentials = tradeHistory.getExchangeCredentials();
         tradeHistoryParams = tradeHistory.getTradeHistoryParams();
-        TradeHistoryParamsAll tradeParams = null;
         UserTrades userTrades = null;
         String response = "";
 
@@ -637,7 +678,8 @@ return "{\"Success\":\"all methods supported}";
             tradeService = xChangeFactory.getTradeService(exchangeCredentials);
 
             log.debug("Call to Dozer...");
-            tradeParams = dozerBeanMapper.map(tradeHistoryParams, TradeHistoryParamsAll.class);
+            //tradeParams = dozerBeanMapper.map(tradeHistoryParams, TradeHistoryParamsAll.class);
+            tradeParams = tradeService.createTradeHistoryParams();
             log.debug("Dozer call success.");
 
             userTrades = tradeService.getTradeHistory(tradeParams);
@@ -647,6 +689,42 @@ return "{\"Success\":\"all methods supported}";
         }
         catch (Exception ex) {
             log.debug("{}: {}", ex.getMessage());
+            throw ex;
+        }
+        return response;
+    }
+
+    @Override
+    public String getFundingHistory(TradeHistory tradeHistory) throws Exception {
+        ExchangeCredentials exchangeCredentials = null;
+        AccountService accountService = null;
+        CurrencyPair currencyPair = null;
+        TradeHistoryParams tradeHistoryParams = null;
+        int scale = 5;
+        exchangeCredentials = tradeHistory.getExchangeCredentials();
+        tradeHistoryParams = tradeHistory.getTradeHistoryParams();
+        //TradeHistoryParams tradeParams = null;
+        org.knowm.xchange.service.trade.params.TradeHistoryParams tradeParams = null;
+        List<FundingRecord> fundingRecords = null;
+        String response = "";
+
+        log.debug("Begin retrieve funding history");
+        try {
+            accountService = xChangeFactory.getAccountService(exchangeCredentials);
+
+            //log.debug("Call to Dozer...");
+            //tradeParams = dozerBeanMapper.map(tradeHistoryParams, TradeHistoryParamsAll.class);
+            //log.debug("Dozer call success.");
+
+            tradeParams = accountService.createFundingHistoryParams();
+            fundingRecords = accountService.getFundingHistory(tradeParams);
+
+            log.debug("funding records{}", fundingRecords);
+            response = jh.getObjectMapper().writeValueAsString(fundingRecords);
+
+        }
+        catch (Exception ex) {
+            log.debug("{}: {}", "fundinghistoryerror" , ex.getMessage());
             throw ex;
         }
         return response;
