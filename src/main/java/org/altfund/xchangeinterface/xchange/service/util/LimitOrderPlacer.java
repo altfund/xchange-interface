@@ -58,23 +58,28 @@ public class LimitOrderPlacer {
             .altfundId(order.getAltfundId())
             .orderSpec(order.getOrderSpec());
 
-        int scale = exchangeScale.getExchangeScale(currencyPair, exchange);
+        int baseScale = exchangeScale.getBaseScale(currencyPair, exchange);
+        int quoteScale = exchangeScale.getQuoteScale(currencyPair, exchange);
 
         if ("ASK".equals(order.getOrderType())) {
             lo = new LimitOrder.Builder(ASK, currencyPair)
                 .tradableAmount(
-                        order.getOrderSpec().getVolume().setScale(scale, BigDecimal.ROUND_HALF_EVEN)
+                        order.getOrderSpec().getVolume().setScale(quoteScale, BigDecimal.ROUND_HALF_EVEN)
                         )
-                .limitPrice(order.getOrderSpec().getPrice())
+                .limitPrice(
+                        order.getOrderSpec().getPrice().setScale(baseScale, BigDecimal.ROUND_HALF_EVEN)
+                        )
                 //.id(order.getOrderId())
                 .build();
         }
         else {
             lo = new LimitOrder.Builder(BID, currencyPair)
                 .tradableAmount(
-                        order.getOrderSpec().getVolume().setScale(scale, BigDecimal.ROUND_HALF_EVEN)
+                        order.getOrderSpec().getVolume().setScale(quoteScale, BigDecimal.ROUND_HALF_EVEN)
                         )
-                .limitPrice(order.getOrderSpec().getPrice())
+                .limitPrice(
+                        order.getOrderSpec().getPrice().setScale(baseScale, BigDecimal.ROUND_HALF_EVEN)
+                        )
                 //.id(order.getOrderId())
                 .build();
         }

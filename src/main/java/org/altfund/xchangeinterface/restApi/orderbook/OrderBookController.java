@@ -60,7 +60,7 @@ public class OrderBookController {
 
             json = xChangeService.getOrderBooks(args);
             response = jh.getObjectMapper().writeValueAsString(json);
-            log.debug(" orderbook: {}", json);
+            //log.debug(" orderbook: {}", json);
 
         }
         catch (JsonProcessingException ex) {

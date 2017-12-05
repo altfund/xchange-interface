@@ -116,7 +116,7 @@ public class MessageEncryption implements EnvironmentAware, InitializingBean {
                                                                  JsonProcessingException,
                                                                  InvalidAlgorithmParameterException {
         try{
-            log.debug("pt: {}.", plainText);
+            //log.debug("pt: {}.", plainText);
             ObjectNode jsonRes = jh.getObjectNode();
 
             final byte[] iv = new byte[16];

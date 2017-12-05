@@ -30,7 +30,7 @@ public class KWayMerge {
         ArrayList<LimitOrderNode> books = new ArrayList<LimitOrderNode>();
         for (int i = 0; i < newBooks.size(); i++){
             books.add(new LimitOrderNode(newBooks.get(i), exchanges.get(i)));
-            log.debug("Adding exchange: {}", newBooks.get(i));
+            //log.debug("Adding exchange: {}", newBooks.get(i));
         }
 
         PriorityQueue<LimitOrderNode> queue = new PriorityQueue<>(books.size(), new KComparator());
@@ -59,6 +59,7 @@ public class KWayMerge {
             if (!node.isEmpty())
                 queue.offer(node.next());
         }
+        log.debug("done sorting: {} exchanges", newBooks.size());
         return sorted;
     }
 
