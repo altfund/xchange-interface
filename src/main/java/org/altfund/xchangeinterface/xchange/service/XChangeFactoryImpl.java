@@ -127,6 +127,7 @@ public class XChangeFactoryImpl implements XChangeFactory {
     }
 
     protected ExchangeSpecification createExchangeSpecification(Exchange exchange, Map<String, String> params) {
+        log.debug("Begin createExchangeSpecification");
         String exchangeClassName = exchange.getExchangeClassName();
         ExchangeSpecification exchangeSpecification = new ExchangeSpecification(exchangeClassName);
 
@@ -150,6 +151,7 @@ public class XChangeFactoryImpl implements XChangeFactory {
         //    log.debug("exchange specific object " + entry.getValue().toString());
         //    exchangeSpecification.setExchangeSpecificParametersItem(entry.getKey(), params.get(entry.getKey()));
         //}
+        log.debug("Returning from createExchangeSpecification");
         return exchangeSpecification;
     }
 
@@ -178,6 +180,7 @@ public class XChangeFactoryImpl implements XChangeFactory {
 
     @Override
     public TradeService getTradeService(ExchangeCredentials exchangeCredentials) throws XChangeServiceException, IOException {
+        log.debug("about to issue variable disapth to trade service");
         return variableDispatch(XChangeDispatcher.TradeServiceType, exchangeCredentials);
     }
 
@@ -254,12 +257,16 @@ public class XChangeFactoryImpl implements XChangeFactory {
                 try {
                     ExchangeSpecification exchangeSpecification = createExchangeSpecification(exchange, exchangeCredentials);
                     if (exchangeTry.isPresent()) {
+                        log.debug("Using new specification on existing exchange.");
                         exchangeTry.get().applySpecification(exchangeSpecification);
                         exchangeCredsMap.put(exchangeCredentials, exchangeTry.get());
                         log.debug("apply specification " + exchange);
                     }
                     else {
-                        exchangeCredsMap.put(exchangeCredentials, ExchangeFactory.INSTANCE.createExchange(exchangeSpecification));
+                        log.debug("Creating exchange {}", exchange);
+                        org.knowm.xchange.Exchange xChange = ExchangeFactory.INSTANCE.createExchange(exchangeSpecification);
+                        log.debug("Have exchange {}, now applying specification", exchange);
+                        exchangeCredsMap.put(exchangeCredentials, xChange);
                         log.debug("Added exchange " + exchange);
                     }
                     return true;
@@ -280,6 +287,7 @@ public class XChangeFactoryImpl implements XChangeFactory {
     }
 
     protected ExchangeSpecification createExchangeSpecification(Exchange exchange, ExchangeCredentials exchangeCredentials) {
+        log.debug("Begin createExchangeSpecification");
         String exchangeClassName = exchange.getExchangeClassName();
         ExchangeSpecification exchangeSpecification = new ExchangeSpecification(exchangeClassName);
 
@@ -290,6 +298,7 @@ public class XChangeFactoryImpl implements XChangeFactory {
         else
             exchangeSpecification.setExchangeSpecificParametersItem("passphrase","");
 
+        log.debug("Returning from createExchangeSpecification");
         return exchangeSpecification;
     }
 

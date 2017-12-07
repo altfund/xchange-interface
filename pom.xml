@@ -23,7 +23,7 @@
         <git.commit.link>${project.scm.url}/commit/${buildNumber}</git.commit.link>
         <commons-io.version>2.5</commons-io.version>
         <rescu.version>1.9.0</rescu.version>
-        <xchange.version>4.2.2</xchange.version>
+        <xchange.version>4.3.1</xchange.version>
     </properties>
 
     <scm>
@@ -169,11 +169,6 @@
         </dependency>
         <dependency>
             <groupId>org.knowm.xchange</groupId>
-            <artifactId>xchange-btc38</artifactId>
-            <version>${xchange.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.knowm.xchange</groupId>
             <artifactId>xchange-bitcurex</artifactId>
             <version>${xchange.version}</version>
         </dependency>
@@ -219,11 +214,6 @@
         </dependency>
         <dependency>
             <groupId>org.knowm.xchange</groupId>
-            <artifactId>xchange-btce</artifactId>
-            <version>${xchange.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.knowm.xchange</groupId>
             <artifactId>xchange-coinbase</artifactId>
             <version>${xchange.version}</version>
         </dependency>
@@ -235,11 +225,6 @@
         <dependency>
             <groupId>org.knowm.xchange</groupId>
             <artifactId>xchange-bittrex</artifactId>
-            <version>${xchange.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.knowm.xchange</groupId>
-            <artifactId>xchange-huobi</artifactId>
             <version>${xchange.version}</version>
         </dependency>
         <dependency>
@@ -299,27 +284,12 @@
         </dependency>
         <dependency>
             <groupId>org.knowm.xchange</groupId>
-            <artifactId>xchange-jubi</artifactId>
-            <version>${xchange.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.knowm.xchange</groupId>
             <artifactId>xchange-itbit</artifactId>
             <version>${xchange.version}</version>
         </dependency>
         <dependency>
             <groupId>org.knowm.xchange</groupId>
             <artifactId>xchange-cryptonit</artifactId>
-            <version>${xchange.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.knowm.xchange</groupId>
-            <artifactId>xchange-chbtc</artifactId>
-            <version>${xchange.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.knowm.xchange</groupId>
-            <artifactId>xchange-bter</artifactId>
             <version>${xchange.version}</version>
         </dependency>
         <dependency>

@@ -688,7 +688,7 @@ return "{\"Success\":\"all methods supported}";
 
         }
         catch (Exception ex) {
-            log.debug("{}: {}", ex.getMessage());
+            log.debug("{}: {}", ex , ex.getMessage());
             throw ex;
         }
         return response;

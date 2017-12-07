@@ -63,7 +63,7 @@ public class LimitOrderPlacer {
 
         if ("ASK".equals(order.getOrderType())) {
             lo = new LimitOrder.Builder(ASK, currencyPair)
-                .tradableAmount(
+                .originalAmount(
                         order.getOrderSpec().getVolume().setScale(quoteScale, BigDecimal.ROUND_HALF_EVEN)
                         )
                 .limitPrice(
@@ -74,7 +74,7 @@ public class LimitOrderPlacer {
         }
         else {
             lo = new LimitOrder.Builder(BID, currencyPair)
-                .tradableAmount(
+                .originalAmount(
                         order.getOrderSpec().getVolume().setScale(quoteScale, BigDecimal.ROUND_HALF_EVEN)
                         )
                 .limitPrice(
