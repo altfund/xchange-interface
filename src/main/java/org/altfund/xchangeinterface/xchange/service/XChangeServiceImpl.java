@@ -426,6 +426,7 @@ public class XChangeServiceImpl implements XChangeService {
         response = jh.getObjectMapper().writeValueAsString(orderResponses);
         return response;
     }
+
     @Override
     public String isFeasible(String exchange) throws Exception {
         ExchangeCredentials exchangeCredentials = new ExchangeCredentials(exchange, "bogus", "bogus", "bogus");
@@ -613,7 +614,10 @@ return "{\"Success\":\"all methods supported}";
         exchangeCredentials = order.getExchangeCredentials();
         String orderType = order.getOrderType();
 
-        if (!("ASK" == orderType.toUpperCase()) || !("BID" == orderType.toUpperCase())) {
+        String ask = "ASK";
+        String bid = "BID";
+
+        if (!ask.equals( orderType.toUpperCase() ) || !bid.equals( orderType.toUpperCase() )) {
             //errorMap.put("ERROR", "order type MUST be equal to 'ASK' or 'BID'");
             //return errorMap;
             log.error("wrong value, must be ASK or BID, was {}, {}", orderType);
