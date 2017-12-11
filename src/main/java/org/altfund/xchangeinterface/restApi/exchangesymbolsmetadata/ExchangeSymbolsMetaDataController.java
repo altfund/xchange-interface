@@ -1,4 +1,4 @@
-package org.altfund.xchangeinterface.restApi.tradefees;
+package org.altfund.xchangeinterface.restApi.exchangesymbolsmetadata;
 
 import java.util.Map;
 import org.springframework.http.ResponseEntity;
@@ -18,20 +18,20 @@ import com.fasterxml.jackson.core.JsonProcessingException;
  * @RequestMapping(method=GET) to narrow this mapping.
  */
 @RestController
-public class TradeFeesController {
+public class ExchangeSymbolsMetaDataController {
     private final XChangeService xChangeService;
     private final JsonHelper jh;
     private final ResponseHandler rh;
 
-    public TradeFeesController(XChangeService xChangeService, JsonHelper jh, ResponseHandler rh) {
+    public ExchangeSymbolsMetaDataController(XChangeService xChangeService, JsonHelper jh, ResponseHandler rh) {
         this.xChangeService = xChangeService;
         this.jh = jh;
         this.rh = rh;
     }
 
-    @RequestMapping(value = "/tradefees", produces = "application/json")
-    public ResponseEntity<String> balance(@RequestParam Map<String, String> params) {
-        ObjectNode json = xChangeService.getExchangeTradeFees(params);
+    @RequestMapping(value = "/exchangesymbolsmetadata", produces = "application/json")
+    public ResponseEntity<String> exchangeSymbolsMetaData(@RequestParam Map<String, String> params) {
+        ObjectNode json = xChangeService.getExchangeSymbolMetaData(params);
         String response = "";
         try {
             response = jh.getObjectMapper().writeValueAsString(json);

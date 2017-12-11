@@ -27,7 +27,7 @@ public interface XChangeService {
     ObjectNode getExchangeCurrencies(String exhange);
     ObjectNode getTickers(String exchange);
     ObjectNode getOrderBooks(Map<String, String> params);
-    ObjectNode getExchangeTradeFees(Map<String, String> params);
+    ObjectNode getExchangeSymbolMetaData(Map<String, String> params);
     ObjectNode getExchangeBalances(ExchangeCredentials params);
     OrderResponse placeLimitOrder(Order order) throws Exception;
     List<CurrencyPair> getExchangeSymbols(String exchange);

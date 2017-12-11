@@ -11,7 +11,7 @@ import org.altfund.xchangeinterface.xchange.service.exceptions.XChangeServiceExc
 import org.altfund.xchangeinterface.util.JsonHelper;
 
 @Slf4j
-public class ExtractTradeFees {
+public class ExtractExchangeSymbolMetaData {
 
     public static ObjectNode toJson(
             Map<CurrencyPair, CurrencyPairMetaData> currencyPairs,

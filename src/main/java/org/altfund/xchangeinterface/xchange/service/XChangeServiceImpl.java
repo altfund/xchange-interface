@@ -10,10 +10,12 @@ import java.util.Optional;
 import java.math.BigDecimal;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.dozer.DozerBeanMapper;
 
 import org.knowm.xchange.service.trade.TradeService;
+import org.knowm.xchange.currency.Currency;
 import org.knowm.xchange.dto.meta.ExchangeMetaData;
 import org.knowm.xchange.dto.meta.CurrencyPairMetaData;
 import org.knowm.xchange.currency.CurrencyPair;
@@ -35,6 +37,8 @@ import static org.altfund.xchangeinterface.xchange.model.OrderStatusTypes.PROCES
 import org.knowm.xchange.service.trade.params.TradeHistoryParamsAll;
 import org.knowm.xchange.service.trade.params.orders.OpenOrdersParams;
 import org.altfund.xchangeinterface.xchange.service.util.ExtractExceptions;
+import org.altfund.xchangeinterface.xchange.service.util.FundingRecordMixIn;
+import org.altfund.xchangeinterface.xchange.service.util.CurrencyMixIn;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 import org.altfund.xchangeinterface.util.JsonHelper;
@@ -53,7 +57,7 @@ import org.altfund.xchangeinterface.xchange.model.TradeHistoryParams;
 import org.altfund.xchangeinterface.xchange.service.util.ExtractCurrencies;
 import org.altfund.xchangeinterface.xchange.service.util.ExtractExchangeTickers;
 import org.altfund.xchangeinterface.xchange.service.util.ExtractOrderBooks;
-import org.altfund.xchangeinterface.xchange.service.util.ExtractTradeFees;
+import org.altfund.xchangeinterface.xchange.service.util.ExtractExchangeSymbolMetaData;
 import org.altfund.xchangeinterface.xchange.service.util.ExtractBalances;
 import org.altfund.xchangeinterface.xchange.service.util.LimitOrderPlacer;
 
@@ -278,9 +282,9 @@ public class XChangeServiceImpl implements XChangeService {
     }
 
     @Override
-    public ObjectNode getExchangeTradeFees(Map<String, String> params) {
+    public ObjectNode getExchangeSymbolMetaData(Map<String, String> params) {
         Optional<ExchangeMetaData>  metaData;
-        ObjectNode tradeMap = jh.getObjectNode();
+        ObjectNode exchangeSymbolToMetaData = jh.getObjectNode();
         ObjectNode errorMap = jh.getObjectNode();
 
         try {
@@ -291,7 +295,7 @@ public class XChangeServiceImpl implements XChangeService {
                 return errorMap;
             }
 
-            tradeMap =  ExtractTradeFees.toJson(metaData.get().getCurrencyPairs(), params.get("exchange"), jh);
+            exchangeSymbolToMetaData =  ExtractExchangeSymbolMetaData.toJson(metaData.get().getCurrencyPairs(), params.get("exchange"), jh);
         }
         catch (XChangeServiceException ex) {
             // import java.time.LocalDateTime;
@@ -303,7 +307,7 @@ public class XChangeServiceImpl implements XChangeService {
             errorMap.put("ERROR", ex.getMessage());
             return errorMap;
         }
-        return tradeMap;
+        return exchangeSymbolToMetaData;
     }
 
     @Override
@@ -724,11 +728,17 @@ return "{\"Success\":\"all methods supported}";
             fundingRecords = accountService.getFundingHistory(tradeParams);
 
             log.debug("funding records{}", fundingRecords);
+            response = fundingRecords.toString();
+            //response = jh.getObjectMapper().writeValueAsString(jh.getObjectMapper().readTree(fundingRecords.toString()));
+            jh.getObjectMapper().addMixIn(Currency.class, CurrencyMixIn.class);
+            jh.getObjectMapper().addMixIn(FundingRecord.class, FundingRecordMixIn.class);
+            //ObjectMapper mapper = new ObjectMapper();
+            //mapper.getSerializationConfig().addMixInAnnotations(FundingRecord.class, FundingRecordMixIn.class);
             response = jh.getObjectMapper().writeValueAsString(fundingRecords);
 
         }
         catch (Exception ex) {
-            log.debug("{}: {}", "fundinghistoryerror" , ex.getMessage());
+            log.warn("{}: {}. \n\n\n {}", "fundinghistoryerror" , ex.getMessage(), ex.getStackTrace());
             throw ex;
         }
         return response;
