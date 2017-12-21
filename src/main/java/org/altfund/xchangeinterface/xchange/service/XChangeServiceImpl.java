@@ -36,6 +36,7 @@ import static org.altfund.xchangeinterface.xchange.model.OrderStatusTypes.CANCEL
 import static org.altfund.xchangeinterface.xchange.model.OrderStatusTypes.PROCESSING_FAILED;
 import org.knowm.xchange.service.trade.params.TradeHistoryParamsAll;
 import org.knowm.xchange.service.trade.params.orders.OpenOrdersParams;
+import org.knowm.xchange.dto.trade.OpenOrders;
 import org.altfund.xchangeinterface.xchange.service.util.ExtractExceptions;
 import org.altfund.xchangeinterface.xchange.service.util.FundingRecordMixIn;
 import org.altfund.xchangeinterface.xchange.service.util.CurrencyMixIn;
@@ -286,10 +287,12 @@ public class XChangeServiceImpl implements XChangeService {
         Optional<ExchangeMetaData>  metaData;
         ObjectNode exchangeSymbolToMetaData = jh.getObjectNode();
         ObjectNode errorMap = jh.getObjectNode();
+        log.debug("params {} ", params);
 
         try {
             //xChangeFactory.setProperties(params.get("exchange"));
             metaData = Optional.ofNullable(xChangeFactory.getExchangeMetaData(params.get("exchange")));
+            log.debug("metadata {} for {}", metaData, params);
             if (!metaData.isPresent()){
                 errorMap.put("ERROR", "No such exchange " + params.get("exchange"));
                 return errorMap;
@@ -752,7 +755,8 @@ return "{\"Success\":\"all methods supported}";
         org.knowm.xchange.service.trade.params.orders.OpenOrdersParams knowmOpenOrderParms = null;
         //knowmOpenOrderParms = openOrder.getOpenOrderParams();
 
-        List<LimitOrder> openOrders = null;
+        List<LimitOrder> openOrdersList = null;
+        OpenOrders openOrders = null;
         ObjectNode errorMap = jh.getObjectNode();
         //ObjectNode userTradesMap = jh.getObjectNode();
         TradeService tradeService = null;
@@ -781,8 +785,11 @@ return "{\"Success\":\"all methods supported}";
                openOrders = tradeService.getOpenOrders(knowmOpenOrderParms).getOpenOrders();
                */
 
+
             //openOrders = tradeService.getOpenOrders(knowmOpenOrderParms).getOpenOrders();
-            response = tradeService.getOpenOrders(knowmOpenOrderParms).toString();
+            openOrders = tradeService.getOpenOrders(knowmOpenOrderParms);
+            openOrdersList = openOrders.getOpenOrders();
+            response = jh.getObjectMapper().writeValueAsString(openOrdersList);
             log.debug("OPEN ORDERS: {}", response);
 
             //userTradesMap = ExtractUserTrades.toJson(userTrades, exchangeCredentials.getExchange(), jh);
