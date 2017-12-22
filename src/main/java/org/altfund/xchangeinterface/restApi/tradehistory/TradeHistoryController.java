@@ -67,6 +67,7 @@ public class TradeHistoryController {
             response = xChangeService.getTradeHistory(tradeHistory);
         }
         catch (Exception ex) {
+            log.warn("Exception occurred when calling trade history.");
             return rh.send(ex, true);
         }
         return rh.send(response, true);

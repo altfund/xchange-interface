@@ -49,7 +49,7 @@ public class OrderBookSquasher {
         orders.remove(firstOrder);
         orders.add(
                     new LimitOrder.Builder(order1.getType(), order1.getCurrencyPair())
-                    .tradableAmount(order1.getTradableAmount().add(order2.getTradableAmount()))
+                    .originalAmount(order1.getOriginalAmount().add(order2.getOriginalAmount()))
                     .limitPrice(order1.getLimitPrice())
                     .build()
                 );

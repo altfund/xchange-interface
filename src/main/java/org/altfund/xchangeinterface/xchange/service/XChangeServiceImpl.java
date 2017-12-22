@@ -10,10 +10,12 @@ import java.util.Optional;
 import java.math.BigDecimal;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.dozer.DozerBeanMapper;
 
 import org.knowm.xchange.service.trade.TradeService;
+import org.knowm.xchange.currency.Currency;
 import org.knowm.xchange.dto.meta.ExchangeMetaData;
 import org.knowm.xchange.dto.meta.CurrencyPairMetaData;
 import org.knowm.xchange.currency.CurrencyPair;
@@ -34,7 +36,10 @@ import static org.altfund.xchangeinterface.xchange.model.OrderStatusTypes.CANCEL
 import static org.altfund.xchangeinterface.xchange.model.OrderStatusTypes.PROCESSING_FAILED;
 import org.knowm.xchange.service.trade.params.TradeHistoryParamsAll;
 import org.knowm.xchange.service.trade.params.orders.OpenOrdersParams;
+import org.knowm.xchange.dto.trade.OpenOrders;
 import org.altfund.xchangeinterface.xchange.service.util.ExtractExceptions;
+import org.altfund.xchangeinterface.xchange.service.util.FundingRecordMixIn;
+import org.altfund.xchangeinterface.xchange.service.util.CurrencyMixIn;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 import org.altfund.xchangeinterface.util.JsonHelper;
@@ -53,7 +58,7 @@ import org.altfund.xchangeinterface.xchange.model.TradeHistoryParams;
 import org.altfund.xchangeinterface.xchange.service.util.ExtractCurrencies;
 import org.altfund.xchangeinterface.xchange.service.util.ExtractExchangeTickers;
 import org.altfund.xchangeinterface.xchange.service.util.ExtractOrderBooks;
-import org.altfund.xchangeinterface.xchange.service.util.ExtractTradeFees;
+import org.altfund.xchangeinterface.xchange.service.util.ExtractExchangeSymbolMetaData;
 import org.altfund.xchangeinterface.xchange.service.util.ExtractBalances;
 import org.altfund.xchangeinterface.xchange.service.util.LimitOrderPlacer;
 
@@ -278,20 +283,22 @@ public class XChangeServiceImpl implements XChangeService {
     }
 
     @Override
-    public ObjectNode getExchangeTradeFees(Map<String, String> params) {
+    public ObjectNode getExchangeSymbolMetaData(Map<String, String> params) {
         Optional<ExchangeMetaData>  metaData;
-        ObjectNode tradeMap = jh.getObjectNode();
+        ObjectNode exchangeSymbolToMetaData = jh.getObjectNode();
         ObjectNode errorMap = jh.getObjectNode();
+        log.debug("params {} ", params);
 
         try {
             //xChangeFactory.setProperties(params.get("exchange"));
             metaData = Optional.ofNullable(xChangeFactory.getExchangeMetaData(params.get("exchange")));
+            log.debug("metadata {} for {}", metaData, params);
             if (!metaData.isPresent()){
                 errorMap.put("ERROR", "No such exchange " + params.get("exchange"));
                 return errorMap;
             }
 
-            tradeMap =  ExtractTradeFees.toJson(metaData.get().getCurrencyPairs(), params.get("exchange"), jh);
+            exchangeSymbolToMetaData =  ExtractExchangeSymbolMetaData.toJson(metaData.get().getCurrencyPairs(), params.get("exchange"), jh);
         }
         catch (XChangeServiceException ex) {
             // import java.time.LocalDateTime;
@@ -303,7 +310,7 @@ public class XChangeServiceImpl implements XChangeService {
             errorMap.put("ERROR", ex.getMessage());
             return errorMap;
         }
-        return tradeMap;
+        return exchangeSymbolToMetaData;
     }
 
     @Override
@@ -426,6 +433,7 @@ public class XChangeServiceImpl implements XChangeService {
         response = jh.getObjectMapper().writeValueAsString(orderResponses);
         return response;
     }
+
     @Override
     public String isFeasible(String exchange) throws Exception {
         ExchangeCredentials exchangeCredentials = new ExchangeCredentials(exchange, "bogus", "bogus", "bogus");
@@ -613,7 +621,10 @@ return "{\"Success\":\"all methods supported}";
         exchangeCredentials = order.getExchangeCredentials();
         String orderType = order.getOrderType();
 
-        if (!("ASK" == orderType.toUpperCase()) || !("BID" == orderType.toUpperCase())) {
+        String ask = "ASK";
+        String bid = "BID";
+
+        if (!ask.equals( orderType.toUpperCase() ) || !bid.equals( orderType.toUpperCase() )) {
             //errorMap.put("ERROR", "order type MUST be equal to 'ASK' or 'BID'");
             //return errorMap;
             log.error("wrong value, must be ASK or BID, was {}, {}", orderType);
@@ -688,7 +699,7 @@ return "{\"Success\":\"all methods supported}";
 
         }
         catch (Exception ex) {
-            log.debug("{}: {}", ex.getMessage());
+            log.debug("{}: {}", ex , ex.getMessage());
             throw ex;
         }
         return response;
@@ -720,11 +731,17 @@ return "{\"Success\":\"all methods supported}";
             fundingRecords = accountService.getFundingHistory(tradeParams);
 
             log.debug("funding records{}", fundingRecords);
+            response = fundingRecords.toString();
+            //response = jh.getObjectMapper().writeValueAsString(jh.getObjectMapper().readTree(fundingRecords.toString()));
+            jh.getObjectMapper().addMixIn(Currency.class, CurrencyMixIn.class);
+            jh.getObjectMapper().addMixIn(FundingRecord.class, FundingRecordMixIn.class);
+            //ObjectMapper mapper = new ObjectMapper();
+            //mapper.getSerializationConfig().addMixInAnnotations(FundingRecord.class, FundingRecordMixIn.class);
             response = jh.getObjectMapper().writeValueAsString(fundingRecords);
 
         }
         catch (Exception ex) {
-            log.debug("{}: {}", "fundinghistoryerror" , ex.getMessage());
+            log.warn("{}: {}. \n\n\n {}", "fundinghistoryerror" , ex.getMessage(), ex.getStackTrace());
             throw ex;
         }
         return response;
@@ -738,7 +755,8 @@ return "{\"Success\":\"all methods supported}";
         org.knowm.xchange.service.trade.params.orders.OpenOrdersParams knowmOpenOrderParms = null;
         //knowmOpenOrderParms = openOrder.getOpenOrderParams();
 
-        List<LimitOrder> openOrders = null;
+        List<LimitOrder> openOrdersList = null;
+        OpenOrders openOrders = null;
         ObjectNode errorMap = jh.getObjectNode();
         //ObjectNode userTradesMap = jh.getObjectNode();
         TradeService tradeService = null;
@@ -767,8 +785,11 @@ return "{\"Success\":\"all methods supported}";
                openOrders = tradeService.getOpenOrders(knowmOpenOrderParms).getOpenOrders();
                */
 
+
             //openOrders = tradeService.getOpenOrders(knowmOpenOrderParms).getOpenOrders();
-            response = tradeService.getOpenOrders(knowmOpenOrderParms).toString();
+            openOrders = tradeService.getOpenOrders(knowmOpenOrderParms);
+            openOrdersList = openOrders.getOpenOrders();
+            response = jh.getObjectMapper().writeValueAsString(openOrdersList);
             log.debug("OPEN ORDERS: {}", response);
 
             //userTradesMap = ExtractUserTrades.toJson(userTrades, exchangeCredentials.getExchange(), jh);

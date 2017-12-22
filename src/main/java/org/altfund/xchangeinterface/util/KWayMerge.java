@@ -23,7 +23,7 @@ public class KWayMerge {
     //TODO don't need ArrayList the whole time, normal list would suffice
     public List<LimitOrderExchange> mergeKLists(ArrayList<List<LimitOrder>> newBooks, ArrayList<String> exchanges) {
         if (newBooks == null || newBooks.size() == 0){
-            log.debug("new books null or of size 0");
+            log.warn("new books null or of size 0");
             return null;
         }
 
@@ -59,6 +59,7 @@ public class KWayMerge {
             if (!node.isEmpty())
                 queue.offer(node.next());
         }
+
         log.debug("done sorting: {} exchanges", newBooks.size());
         return sorted;
     }

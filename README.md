@@ -171,15 +171,18 @@
      encrypted_data = {exchange: "<exchange>", key: "<key>", secret="<secret>", passphrase="<passphrase>"}
      ```
 
-## /tradefees
+## /exchangesymbolsmetadata
      - /tradefees?exchange=<exchange>
     - org.knowm.xchange.dto.meta.CurrencyPairMetaData, http://knowm.org/javadocs/xchange/org/knowm/xchange/dto/meta/CurrencyPairMetaData.html
     - currency pair metadata for each currency pair on given <exchange>.
+    - (BigDecimal tradingFee, BigDecimal minimumAmount, BigDecimal maximumAmount, Integer priceScale)
+    - This returns 4 important bits of information but it is inconsistent whether or not
+    the exchange will actually have a value for any of the given values it returns.
 
 ## /isfeasible
     - invoke isfeasible -e gdax
     - /isfeasible?exchange=<exchange>
-    
+
 ## /exchangesymbols
     - invoke exchangesymbols -e gdax
     - /exchangesymbols?exchange=<exchange>
