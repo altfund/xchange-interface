@@ -41,6 +41,7 @@ import org.altfund.xchangeinterface.xchange.service.util.ExtractExceptions;
 import org.altfund.xchangeinterface.xchange.service.util.FundingRecordMixIn;
 import org.altfund.xchangeinterface.xchange.service.util.CurrencyMixIn;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import org.altfund.xchangeinterface.exception.CancelOrderException;
 
 import org.altfund.xchangeinterface.util.JsonHelper;
 import org.altfund.xchangeinterface.util.KWayMerge;
@@ -374,7 +375,8 @@ public class XChangeServiceImpl implements XChangeService {
             orderResponse = tradeService.cancelOrder(order.getOrderId());
         }
         catch (Exception e) {
-            throw e;
+            log.debug("could not cancel order {}", e);
+            throw new CancelOrderException("Failed to cancel order, order id does not exist or internal exchange error: " + e.getMessage());
         }
         /*
            catch (IOException e) {

@@ -47,8 +47,8 @@ public class XChangeServiceConfig {
   }
 
   @Bean
-  public ResponseHandler responseHandler(MessageEncryption me) {
-    return new ResponseHandler(me);
+  public ResponseHandler responseHandler(MessageEncryption me, JsonHelper jh) {
+    return new ResponseHandler(me, jh);
   }
 
   @Bean
