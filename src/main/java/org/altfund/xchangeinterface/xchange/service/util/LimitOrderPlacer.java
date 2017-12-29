@@ -58,28 +58,33 @@ public class LimitOrderPlacer {
             .altfundId(order.getAltfundId())
             .orderSpec(order.getOrderSpec());
 
+        //TODO need to honor CurrencyPairMetaData.getPriceScale() BEFORE individual
+        //currency scale.
+
+        log.debug("currency pair is {}", currencyPair);
+
         int baseScale = exchangeScale.getBaseScale(currencyPair, exchange);
         int quoteScale = exchangeScale.getQuoteScale(currencyPair, exchange);
 
+        BigDecimal base = order.getOrderSpec().getVolume();
+        BigDecimal quote = order.getOrderSpec().getPrice();
+
+        base = base.setScale(baseScale, BigDecimal.ROUND_HALF_EVEN);
+        quote = quote.setScale(quoteScale, BigDecimal.ROUND_HALF_EVEN);
+
+        log.debug("Submitting limit order with following base amount {} at scale {} and quote price {} at scale {}", base, baseScale, quote, quoteScale);
+
         if ("ASK".equals(order.getOrderType())) {
             lo = new LimitOrder.Builder(ASK, currencyPair)
-                .originalAmount(
-                        order.getOrderSpec().getVolume().setScale(quoteScale, BigDecimal.ROUND_HALF_EVEN)
-                        )
-                .limitPrice(
-                        order.getOrderSpec().getPrice().setScale(baseScale, BigDecimal.ROUND_HALF_EVEN)
-                        )
+                .originalAmount(base)
+                .limitPrice(quote)
                 //.id(order.getOrderId())
                 .build();
         }
         else {
             lo = new LimitOrder.Builder(BID, currencyPair)
-                .originalAmount(
-                        order.getOrderSpec().getVolume().setScale(quoteScale, BigDecimal.ROUND_HALF_EVEN)
-                        )
-                .limitPrice(
-                        order.getOrderSpec().getPrice().setScale(baseScale, BigDecimal.ROUND_HALF_EVEN)
-                        )
+                .originalAmount(base)
+                .limitPrice(quote)
                 //.id(order.getOrderId())
                 .build();
         }
