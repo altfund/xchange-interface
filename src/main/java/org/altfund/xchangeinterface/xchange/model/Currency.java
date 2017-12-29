@@ -20,6 +20,7 @@ public enum Currency {
   BAM,
   BBD,
   BC,
+  BCH,
   BLK,
   BDT,
   BGC,
