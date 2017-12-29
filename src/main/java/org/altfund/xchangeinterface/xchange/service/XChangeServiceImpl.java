@@ -697,6 +697,7 @@ return "{\"Success\":\"all methods supported}";
 
             userTrades = tradeService.getTradeHistory(tradeParams);
 
+            jh.getObjectMapper().addMixIn(Currency.class, CurrencyMixIn.class);
             response = jh.getObjectMapper().writeValueAsString(userTrades);
 
         }

@@ -98,9 +98,12 @@ public class ResponseHandler {
             response = "CancelOrderException " + ex.getMessage();
         }
         else {
-            response =  ex.getMessage();
+            response =  "UnknownException  " + ex.getClass().getCanonicalName()  + " "  + ex.getMessage();
         }
         errorMap.put("ERROR", response);
+
+        log.debug("Exception thrown\n{}", ex.getStackTrace());
+        ex.printStackTrace();
 
         String finalResponse = "";
         try {
