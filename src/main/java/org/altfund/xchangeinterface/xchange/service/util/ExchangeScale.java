@@ -31,67 +31,102 @@ public class ExchangeScale {
         return new BigDecimal("-1");
     }
 
+    /* quote we want to use the price scale determined by the market.
+     *
+     */
     public int getQuoteScale(CurrencyPair cp, org.knowm.xchange.Exchange exchange) {
-        //Optional<org.knowm.xchange.Exchange> exchange =
-        //    Optional.ofNullable(exchangeCredsMap.get(exchangeCredentials));
+
+        //TODO check BCH/USD metadata, if it is correct stop this nonsense.
+        CurrencyPair currencyPair = new CurrencyPair("BCH","USD");
+        if (cp.compareTo(currencyPair) == 0) {
+            log.debug("Randomly setting base scale to 2. SUPER AWFUL BREAK IN CODE DUE TO BCH/USD METADATA ERROR");
+            log.debug("setting quote scale: {}", 2);
+            return 2;
+        }
 
         Optional<ExchangeMetaData> exchangeMetaData =
             Optional.ofNullable(exchange.getExchangeMetaData());
 
-        Optional<CurrencyPairMetaData> exCurPairMetaData =
-            Optional.ofNullable(exchangeMetaData.get().getCurrencyPairs().get(cp));
-        //if (exchangeMetaData.isPresent())
-        //    log.debug("exchange meta data {}.", exchangeMetaData.get());
+        Optional<Integer> exQuoteCurScale = null;
+        Optional<CurrencyMetaData> exQuoteCurMd = null;
+        Optional<CurrencyPairMetaData> exCurPairMetaData = null;
+        Optional<Integer> exCurPairMetaDataPriceScale = null;
 
-        Optional<CurrencyMetaData> exQuoteCurMd =
-            Optional.ofNullable(exchangeMetaData.get().getCurrencies().get(cp.counter));
+        if (exchangeMetaData.isPresent()) {
+            exCurPairMetaData = Optional.ofNullable(exchangeMetaData.get().getCurrencyPairs().get(cp));
+            if (exCurPairMetaData.isPresent()) {
+                exCurPairMetaDataPriceScale = Optional.ofNullable(exCurPairMetaData.get().getPriceScale());
+            }
+            exQuoteCurMd = Optional.ofNullable(exchangeMetaData.get().getCurrencies().get(cp.counter));
+        }
 
-        Optional<Integer> exQuoteCurScale =
-            Optional.ofNullable(exQuoteCurMd.get().getScale());
+        if (exQuoteCurMd != null && exQuoteCurMd.isPresent()) {
+            exQuoteCurScale = Optional.ofNullable(exQuoteCurMd.get().getScale());
+        }
 
-        if (exCurPairMetaData.isPresent() && exCurPairMetaData.get().getMinimumAmount() != null) {
-            log.debug("found xchange scale in the currency pair meta data minimum amt.");
+        if (exCurPairMetaDataPriceScale != null && exCurPairMetaDataPriceScale.isPresent()) {
+            log.debug("Currency pair meta data for given currency pair {}", exCurPairMetaData.get());
+            log.debug("found xchange scale in the currency pair meta data price scale 1st preference: PREFERRED!");
+            log.debug("setting quote scale: {}", exCurPairMetaDataPriceScale.get());
+            return exCurPairMetaDataPriceScale.get();
+        }
+        else if (exCurPairMetaData != null && exCurPairMetaData.isPresent() && exCurPairMetaData.get().getMinimumAmount() != null) {
+            log.debug("found xchange scale in the currency pair meta data minimum amt. 2nd prefernce");
             log.debug("setting quote scale: {}", exCurPairMetaData.get().getMinimumAmount().scale());
             return exCurPairMetaData.get().getMinimumAmount().scale();
-        } else if (exQuoteCurScale.isPresent()){
-            log.debug("inferred xchange scale from the quote currency.");
+        } else if (exQuoteCurScale !=  null && exQuoteCurScale.isPresent()){
+            log.debug("inferred xchange scale from the quote currency. 3rd preference");
             log.debug("setting quote scale: {}", exQuoteCurScale.get());
             return exQuoteCurScale.get();
         }
-        log.debug("Randomly setting quote scale to 5.");
-        log.debug("setting quote scale: {}", 5);
-        return 5;
+        log.debug("Randomly setting base scale to 2. 4th preference, LEAST PREFERRED");
+        log.debug("setting quote scale: {}", 2);
+        return 2;
     }
 
-    public int getBaseScale(CurrencyPair cp, org.knowm.xchange.Exchange exchange) {
-        //Optional<org.knowm.xchange.Exchange> exchange =
-        //    Optional.ofNullable(exchangeCredsMap.get(exchangeCredentials));
+    /*
+    private int getScale() {
+        TODO make getBaseScale and getQuoteScale same method AND figure out
+        which approximation for scale is better?
+    }
+    */
 
+    /*
+     *
+     */
+    public int getBaseScale(CurrencyPair cp, org.knowm.xchange.Exchange exchange) {
         Optional<ExchangeMetaData> exchangeMetaData =
             Optional.ofNullable(exchange.getExchangeMetaData());
 
-        Optional<CurrencyPairMetaData> exCurPairMetaData =
-            Optional.ofNullable(exchangeMetaData.get().getCurrencyPairs().get(cp));
-        //if (exchangeMetaData.isPresent())
-        //    log.debug("exchange meta data {}.", exchangeMetaData.get());
+        Optional<Integer> exBaseCurScale = null;
+        Optional<CurrencyMetaData> exBaseCurMd = null;
+        /*
+        Optional<CurrencyPairMetaData> exCurPairMetaData = null;
+        */
 
-        Optional<CurrencyMetaData> exBaseCurMd =
-            Optional.ofNullable(exchangeMetaData.get().getCurrencies().get(cp.base));
+        if (exchangeMetaData.isPresent()) {
+            //exCurPairMetaData = Optional.ofNullable(exchangeMetaData.get().getCurrencyPairs().get(cp));
+            exBaseCurMd = Optional.ofNullable(exchangeMetaData.get().getCurrencies().get(cp.base));
+        }
 
-        Optional<Integer> exBaseCurScale =
-            Optional.ofNullable(exBaseCurMd.get().getScale());
+        if (exBaseCurMd != null && exBaseCurMd.isPresent()) {
+            exBaseCurScale = Optional.ofNullable(exBaseCurMd.get().getScale());
+        }
 
-        if (exCurPairMetaData.isPresent() && exCurPairMetaData.get().getPriceScale() != null) {
-            log.debug("found xchange scale in the currency pair meta data price scale.");
-            log.debug("setting base scale: {}", exCurPairMetaData.get().getPriceScale());
-            return exCurPairMetaData.get().getPriceScale();
-        } else if (exBaseCurScale.isPresent()){
-            log.debug("inferred xchange scale from the base currency.");
+        if (exBaseCurScale != null && exBaseCurScale.isPresent()){
+            log.debug("inferred xchange scale from the base currency.1st preference PREFERRED");
             log.debug("setting base scale: {}", exBaseCurScale.get());
             return exBaseCurScale.get();
         }
-        log.debug("Randomly setting base scale to 5.");
-        log.debug("setting base scale: {}", 5);
-        return 5;
+        /*
+        else if (exCurPairMetaData != null && exCurPairMetaData.isPresent() && exCurPairMetaData.get().getPriceScale() != null) {
+            log.debug("found xchange scale in the currency pair meta data price scale.");
+            log.debug("setting base scale: {}", exCurPairMetaData.get().getPriceScale());
+            return exCurPairMetaData.get().getPriceScale();
+        }
+        */
+        log.debug("Randomly setting base scale to 2. 2nd preference, LEAST PREFERRED");
+        log.debug("setting base scale: {}", 2);
+        return 2;
     }
 }

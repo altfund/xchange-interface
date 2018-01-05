@@ -67,6 +67,7 @@ public class CancelOrderController {
             response = jh.getObjectMapper().writeValueAsString(orderResponse);
         }
         catch (Exception ex) {
+            log.debug("Exception caught in cancel order controller {}", ex.getMessage());
             return rh.send(ex, true);
         }
         return rh.send(response, true);

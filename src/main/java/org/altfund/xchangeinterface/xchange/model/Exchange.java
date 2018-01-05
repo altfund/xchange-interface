@@ -6,8 +6,10 @@ package org.altfund.xchangeinterface.xchange.model;
 public enum Exchange {
 
   ANX("org.knowm.xchange.anx.v2.ANXExchange"),
+  BINANCE("org.knowm.xchange.binance.BinanceExchange"),
   BITFINEX("org.knowm.xchange.bitfinex.v1.BitfinexExchange"),
   BITCOINDE("org.knowm.xchange.bitcoinde.BitcoindeExchange"),
+  BITFLYER("org.knowm.xchange.bitflyer.BitflyerExchange"),
   BITSO("org.knowm.xchange.bitso.BitsoExchange"),
   BITSTAMP("org.knowm.xchange.bitstamp.BitstampExchange"),
   BTCMARKETS("org.knowm.xchange.btcmarkets.BTCMarketsExchange"),

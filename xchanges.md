@@ -59,3 +59,4 @@ bitcoincharts
 bitcoinaverage
 bitbay
 anx
+binance

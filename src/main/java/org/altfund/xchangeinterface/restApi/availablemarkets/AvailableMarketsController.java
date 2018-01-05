@@ -39,7 +39,7 @@ public class AvailableMarketsController {
     }
 
     @RequestMapping(value = "/availablemarkets", produces = "application/json")
-    public ResponseEntity<String> availablemarkets(@RequestParam Map<String, String> params) {
+    public ResponseEntity<String> availablemarkets(@RequestParam Map<String, String> params) throws JsonProcessingException {
         List<CurrenciesOnExchange> currenciesOnExchanges = null;
         String response = "";
         EncryptedOrder encryptedOrder = null;
@@ -56,7 +56,7 @@ public class AvailableMarketsController {
             return rh.send(ex, true);
         }
         catch (Exception ex) {
-            log.error("Caught general error when processing {}.", ex);
+            log.error("Caught general error when processing avilable markets {}.", ex);
             return rh.send(ex, true);
         }
         //final HttpHeaders httpHeaders= new HttpHeaders();

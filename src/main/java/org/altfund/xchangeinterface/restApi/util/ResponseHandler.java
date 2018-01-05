@@ -27,6 +27,7 @@ import java.security.InvalidKeyException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.BadPaddingException;
 import org.altfund.xchangeinterface.xchange.service.exceptions.XChangeServiceException;
+import org.altfund.xchangeinterface.exception.CancelOrderException;
 
 import java.io.UnsupportedEncodingException;
 import org.knowm.xchange.exceptions.NotYetImplementedForExchangeException;
@@ -47,50 +48,71 @@ import org.knowm.xchange.exceptions.NotAvailableFromExchangeException;
 public class ResponseHandler {
 
     private MessageEncryption messageEncryption;
+    private final JsonHelper jh;
 
-    public ResponseHandler(MessageEncryption messageEncryption) {
+    public ResponseHandler(MessageEncryption messageEncryption, JsonHelper jh) {
         this.messageEncryption = messageEncryption;
+        this.jh = jh;
     }
 
     public String getErrorString(Exception ex) {
+       ObjectNode errorMap = jh.getObjectNode();
         String response = "";
         if (ex instanceof XChangeServiceException) {
-            response = "{\"ERROR\": \"initializing exchange "+ ex.getMessage() + "\"}";
+            response =  "initializing exchange "+ ex.getMessage();
         }
         if (ex instanceof IOException) {
-            response = "{\"ERROR\": \"IOException "+ ex.getMessage() + "\"}";
+            response = "IOException "+ ex.getMessage();
         }
         else if (ex instanceof ExchangeException) {
-            response = "{\"ERROR\": \"ExchangeException "+ ex.getMessage() + "\"}";
+            response = "ExchangeException "+ ex.getMessage();
         }
         else if (ex instanceof IllegalArgumentException) {
-            response = "{\"ERROR\": \"IllegalArgumentException  "+ ex.getMessage() + "\"}";
+            response = "IllegalArgumentException  "+ ex.getMessage();
         }
         else if (ex instanceof NotAvailableFromExchangeException) {
-            response = "{\"ERROR\": \"NotAvailableFromExchangeException"+ ex.getMessage() + "\"}";
+            response = "NotAvailableFromExchangeException"+ ex.getMessage();
         }
         else if (ex instanceof NotYetImplementedForExchangeException) {
-            response = "{\"ERROR\": \"NotYetImplementedForExchangeException "+ ex.getMessage() + "\"}";
+            response = "NotYetImplementedForExchangeException "+ ex.getMessage();
         }
         else if (ex instanceof NoSuchAlgorithmException) {
-            response = "{\"ERROR\": \"NoSuchAlgorithmException (error with encryption) "+ ex.getMessage() + "\"}";
+            response = "NoSuchAlgorithmException (error with encryption) "+ ex.getMessage();
         }
         else if (ex instanceof NoSuchPaddingException) {
-            response = "{\"ERROR\": \"NoSuchPaddingException (error with encryption) "+ ex.getMessage() + "\"}";
+            response = "NoSuchPaddingException (error with encryption) "+ ex.getMessage();
         }
         else if (ex instanceof InvalidKeyException) {
-            response = "{\"ERROR\": \"Invalid Key Exception (error with encryption) "+ ex.getMessage() + "\"}";
+            response = "Invalid Key Exception (error with encryption) "+ ex.getMessage();
         }
         else if (ex instanceof IllegalBlockSizeException) {
-            response = "{\"ERROR\": \"Illegal Block Size Exception (error with encryption) "+ ex.getMessage() + "\"}";
+            response = "Illegal Block Size Exception (error with encryption) "+ ex.getMessage();
         }
         else if (ex instanceof BadPaddingException) {
-            response = "{\"ERROR\": \"BadPaddingException (error with encryption) "+ ex.getMessage() + "\"}";
+            response = "BadPaddingException (error with encryption) "+ ex.getMessage();
         }
         else if (ex instanceof UnsupportedEncodingException) {
-            response = "{\"ERROR\": \"UnsupportedEncodingException (error with encryption) "+ ex.getMessage() + "\"}";
+            response = "UnsupportedEncodingException (error with encryption) "+ ex.getMessage();
         }
-        return response;
+        else if (ex instanceof CancelOrderException) {
+            response = "CancelOrderException " + ex.getMessage();
+        }
+        else {
+            response =  "UnknownException  " + ex.getClass().getCanonicalName()  + " "  + ex.getMessage();
+        }
+        errorMap.put("ERROR", response);
+
+        log.debug("Exception thrown\n{}", ex.getStackTrace());
+        ex.printStackTrace();
+
+        String finalResponse = "";
+        try {
+            finalResponse = jh.getObjectMapper().writeValueAsString(errorMap);
+        }
+        catch ( JsonProcessingException jex) {
+            finalResponse = "{\"ERROR\":" + ex.getMessage() + "\"}";
+        }
+        return finalResponse;
     }
 
     public String send(Exception ex) {
@@ -98,7 +120,8 @@ public class ResponseHandler {
     }
 
     public ResponseEntity<String> send(Exception ex, boolean doEncrypt) {
-        return send(getErrorString(ex), doEncrypt);
+        String res = getErrorString(ex);
+        return send(res, doEncrypt);
     }
 
     public ResponseEntity<String> send(String res, boolean doEncrypt) {

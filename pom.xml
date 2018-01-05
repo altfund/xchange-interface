@@ -23,7 +23,7 @@
         <git.commit.link>${project.scm.url}/commit/${buildNumber}</git.commit.link>
         <commons-io.version>2.5</commons-io.version>
         <rescu.version>1.9.0</rescu.version>
-        <xchange.version>4.3.1</xchange.version>
+        <xchange.version>4.3.2-SNAPSHOT</xchange.version>
         <jackson.version>2.9.0</jackson.version>
     </properties>
 
@@ -47,6 +47,11 @@
                     <artifactId>slf4j-log4j12</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.knowm.xchange</groupId>
+            <artifactId>xchange-binance</artifactId>
+            <version>${xchange.version}</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
@@ -203,11 +208,13 @@
             <artifactId>xchange-mercadobitcoin</artifactId>
             <version>${xchange.version}</version>
         </dependency>
+        <!--
         <dependency>
             <groupId>org.knowm.xchange</groupId>
             <artifactId>xchange-blockchain</artifactId>
             <version>${xchange.version}</version>
         </dependency>
+        -->
         <dependency>
             <groupId>org.knowm.xchange</groupId>
             <artifactId>xchange-bitcoinium</artifactId>
@@ -343,6 +350,16 @@
             <artifactId>xchange-vircurex</artifactId>
             <version>${xchange.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.knowm.xchange</groupId>
+            <artifactId>xchange-binance</artifactId>
+            <version>${xchange.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.knowm.xchange</groupId>
+            <artifactId>xchange-bitflyer</artifactId>
+            <version>${xchange.version}</version>
+        </dependency>
 
         <!-- Runtime dependencies of xchange-kraken -->
         <dependency>
@@ -376,9 +393,11 @@
         <repository>
             <id>oss.sonatype.org-snapshot</id>
             <url>http://oss.sonatype.org/content/repositories/snapshots</url>
+            <!--
             <releases>
                 <enabled>false</enabled>
             </releases>
+            -->
             <snapshots>
                 <enabled>true</enabled>
             </snapshots>
