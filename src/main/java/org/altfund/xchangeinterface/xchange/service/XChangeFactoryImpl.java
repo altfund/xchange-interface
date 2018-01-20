@@ -93,36 +93,30 @@ public class XChangeFactoryImpl implements XChangeFactory {
         Optional<org.knowm.xchange.Exchange> exchangeFirstTry =
             Optional.ofNullable(exchangeCredsMap.get(exchangeCredentials));
 
-        if (!exchangeFirstTry.isPresent()) {
-            if (setProperties(exchangeCredentials)) {
-                Optional<org.knowm.xchange.Exchange> exchangeSecondTry =
-                    Optional.ofNullable(exchangeCredsMap.get(exchangeCredentials));
+        if (setProperties(exchangeCredentials)) {
+            Optional<org.knowm.xchange.Exchange> exchangeSecondTry =
+                Optional.ofNullable(exchangeCredsMap.get(exchangeCredentials));
 
-                if (!exchangeSecondTry.isPresent()) {
-                    throw new XChangeServiceException("Unknown exchange/exchange init failure on second try: " + exchangeCredentials.getExchange());
-                }
-                else {
-                    log.debug("Adding new exchange {}, calling remote init manually.", exchangeCredentials.getExchange());
-                    try {
-                        exchangeSecondTry.get().remoteInit();
-                    }
-                    catch(IOException ex) {
-                        log.debug("IO ex on remoteInit {}.", ex.getMessage());
-                        throw ex;
-                    }
-                    catch(ExchangeException ex) {
-                        log.debug("exchange exception ex on remoteInit {}.", ex.getMessage());
-                        throw ex;
-                    }
-                    return dispatcher.comeback(exchangeSecondTry.get());
-                }
-            } else {
-                throw new XChangeServiceException("Unknown exchange/exchange init failure, couldn't set properties with params: " + exchangeCredentials.getExchange());
+            if (!exchangeSecondTry.isPresent()) {
+                throw new XChangeServiceException("Unknown exchange/exchange init failure on second try: " + exchangeCredentials.getExchange());
             }
-        }
-        else {
-            log.debug("exchange {} already present for given creds.", exchangeCredentials.getExchange());
-            return dispatcher.comeback(exchangeFirstTry.get());
+            else {
+                log.debug("Adding new exchange {}, calling remote init manually.", exchangeCredentials.getExchange());
+                try {
+                    exchangeSecondTry.get().remoteInit();
+                }
+                catch(IOException ex) {
+                    log.debug("IO ex on remoteInit {}.", ex.getMessage());
+                    throw ex;
+                }
+                catch(ExchangeException ex) {
+                    log.debug("exchange exception ex on remoteInit {}.", ex.getMessage());
+                    throw ex;
+                }
+                return dispatcher.comeback(exchangeSecondTry.get());
+            }
+        } else {
+            throw new XChangeServiceException("Unknown exchange/exchange init failure, couldn't set properties with params: " + exchangeCredentials.getExchange());
         }
     }
 
