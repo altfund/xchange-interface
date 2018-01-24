@@ -36,6 +36,8 @@ import static org.altfund.xchangeinterface.xchange.model.OrderStatusTypes.CANCEL
 import static org.altfund.xchangeinterface.xchange.model.OrderStatusTypes.PROCESSING_FAILED;
 import org.knowm.xchange.service.trade.params.TradeHistoryParamsAll;
 import org.knowm.xchange.service.trade.params.orders.OpenOrdersParams;
+import org.knowm.xchange.service.trade.params.orders.OpenOrdersParamCurrencyPair;
+import org.knowm.xchange.service.trade.params.orders.OpenOrdersParamCurrencyPair;
 import org.knowm.xchange.dto.trade.OpenOrders;
 import org.altfund.xchangeinterface.xchange.service.util.ExtractExceptions;
 import org.altfund.xchangeinterface.xchange.service.util.FundingRecordMixIn;
@@ -758,7 +760,7 @@ return "{\"Success\":\"all methods supported}";
         org.knowm.xchange.service.trade.params.orders.OpenOrdersParams knowmOpenOrderParms = null;
         //knowmOpenOrderParms = openOrder.getOpenOrderParams();
 
-        List<LimitOrder> openOrdersList = null;
+        List<LimitOrder> openOrdersList = new ArrayList<LimitOrder>();
         OpenOrders openOrders = null;
         ObjectNode errorMap = jh.getObjectNode();
         //ObjectNode userTradesMap = jh.getObjectNode();
@@ -790,9 +792,38 @@ return "{\"Success\":\"all methods supported}";
 
 
             //openOrders = tradeService.getOpenOrders(knowmOpenOrderParms).getOpenOrders();
-            openOrders = tradeService.getOpenOrders(knowmOpenOrderParms);
-            openOrdersList = openOrders.getOpenOrders();
-            response = jh.getObjectMapper().writeValueAsString(openOrdersList);
+            if (exchangeCredentials.getExchange().toLowerCase().equals("binance")) {
+                //TODO if is binance OR perhaps if it is this DefaultOpenOrdersParamCurrencyPair
+                //currencyPair = new CurrencyPair("XRP", "BTC");
+                ExchangeMetaData metaData = xChangeFactory.getExchangeMetaData(exchangeCredentials.getExchange());
+                Map<CurrencyPair, CurrencyPairMetaData> currencyPairsMap = metaData.getCurrencyPairs();
+                List<CurrencyPair> currencyPairs = new ArrayList(currencyPairsMap.keySet());
+                OpenOrdersParamCurrencyPair newKnowmOpenOrderParms = (OpenOrdersParamCurrencyPair)knowmOpenOrderParms;
+
+                for (CurrencyPair cp: currencyPairs) {
+                    log.debug("looking at cp {}", cp);
+                    newKnowmOpenOrderParms.setCurrencyPair(cp);
+                    openOrders = tradeService.getOpenOrders(newKnowmOpenOrderParms);
+                    for (LimitOrder lo: openOrders.getOpenOrders()) {
+                        log.debug("adding lo {}", lo);
+                        openOrdersList.add(lo);
+                    }
+                }
+                response = jh.getObjectMapper().writeValueAsString(openOrdersList);
+
+                /*
+                log.debug("the currencyPairs {}", currencyPairs);
+                OpenOrdersParamCurrencyPair newKnowmOpenOrderParms = (OpenOrdersParamCurrencyPair)knowmOpenOrderParms;
+                newKnowmOpenOrderParms.setCurrencyPair(currencyPair);
+                knowmOpenOrderParms = newKnowmOpenOrderParms;
+                */
+            }
+            else {
+                log.debug("params to getOpenOrders {}", knowmOpenOrderParms);
+                openOrders = tradeService.getOpenOrders(knowmOpenOrderParms);
+                openOrdersList = openOrders.getOpenOrders();
+                response = jh.getObjectMapper().writeValueAsString(openOrdersList);
+            }
             log.debug("OPEN ORDERS: {}", response);
 
             //userTradesMap = ExtractUserTrades.toJson(userTrades, exchangeCredentials.getExchange(), jh);

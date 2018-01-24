@@ -352,11 +352,6 @@
         </dependency>
         <dependency>
             <groupId>org.knowm.xchange</groupId>
-            <artifactId>xchange-binance</artifactId>
-            <version>${xchange.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.knowm.xchange</groupId>
             <artifactId>xchange-bitflyer</artifactId>
             <version>${xchange.version}</version>
         </dependency>
