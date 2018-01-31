@@ -26,8 +26,10 @@ public class OrderResponse {
   private String altfundId;
   private OrderStatus orderStatus;
   private LocalDateTime timestamp;
+  private String api = "knowm";
 
   /*
+   * TODO put back, this is useful
   public boolean isRetryable() {
      // log.debug("buy order status error + ", buyOrderStatus.getOrderStatusKind());
       //log.debug("sell order status error + ", sellOrderStatus.getOrderStatusKind());

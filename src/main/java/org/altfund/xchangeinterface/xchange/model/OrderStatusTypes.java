@@ -23,21 +23,21 @@ public enum OrderStatusTypes {
        PROCESSING_FAILED(OrderStatusKind.PROCESSING_FAILED, "PROCESSING_FAILED");
 
        public enum OrderStatusKind {
-       PLACED,
-       GENERAL_EXCHANGE_ERROR,
-       NOT_AVAILABLE_FROM_EXCHANGE,
-       NOT_YET_IMPLEMENTED_FOR_EXCHANGE,
-       NETWORK_ERROR,
-       INSUFFICIENT_FUNDS,
-       PRICE_TOO_SMALL,
-       PRICE_TOO_LARGE,
-       ORDER_TOO_SMALL,
-       ORDER_TOO_LARGE,
-       INVALID_ARGUMENTS_VOLUME,
-       UNKNOWN_ERROR,
-       CANCELED,
-       CANCEL_FAILED,
-       PROCESSING_FAILED
+           PLACED,
+           GENERAL_EXCHANGE_ERROR,
+           NOT_AVAILABLE_FROM_EXCHANGE,
+           NOT_YET_IMPLEMENTED_FOR_EXCHANGE,
+           NETWORK_ERROR,
+           INSUFFICIENT_FUNDS,
+           PRICE_TOO_SMALL,
+           PRICE_TOO_LARGE,
+           ORDER_TOO_SMALL,
+           ORDER_TOO_LARGE,
+           INVALID_ARGUMENTS_VOLUME,
+           UNKNOWN_ERROR,
+           CANCELED,
+           CANCEL_FAILED,
+           PROCESSING_FAILED
        }
 
     private OrderStatusKind orderStatusKind;
